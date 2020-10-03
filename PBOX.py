@@ -321,7 +321,7 @@ def program_volute():
     print('Success!')
 
     print('\nYour system is being unmuted multiple times per second')
-    print('If the audio is choppy, try altering the amount of threads generated.')
+    print('If the audio is choppy, try altering the number of threads generated.')
     print('\nPress ENTER to stop')
     try:
         input()
