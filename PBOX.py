@@ -280,6 +280,8 @@ def menu_interface():
         else:
             print(f'Sorry, {data["program"]["id"][int(selected_program)]["name"]} is not compatible with your OS.')
             sleep(0.7)
+    elif selected_program.lower() == 'a program':
+        print('Very funny.')
     else:
         print(f'Sorry, "{selected_program}" is not a valid program id"')
         sleep(0.7)
