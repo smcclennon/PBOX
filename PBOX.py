@@ -9,7 +9,7 @@ def reset_data():
     data = {
         "meta": {
             "name": "PBOX",
-            "ver": "0.0.0",
+            "ver": "0.0.1",
             "id": "6"
         },
         "setup": {
@@ -397,7 +397,7 @@ def program_systemusage():
             disk_partitions[i]["opts"] = disk_partitions[i]["opts"].split(',')
             if disk_partitions[i]["opts"][0] == 'rw':
                 disk_partitions[i]["opts"][0] = 'Read/Write'
-            elif disk_partitions[i]["opts"][0] == 'r':
+            elif disk_partitions[i]["opts"][0] == 'ro':
                 disk_partitions[i]["opts"][0] = 'Read only'
             try:
                 disk_io[i] = psutil.disk_io_counters(perdisk=True)[f"PhysicalDrive{i}"]._asdict()  # {0: {'read_count': 3849381, 'write_count': 3138262, 'read_bytes': 93119674368, 'write_bytes': 88870555136, 'read_time': 2227, 'write_time': 1318, 'error': 0}, 1: {'read_count': 238, 'write_count': 123, 'read_bytes': 2912256, 'write_bytes': 569344, 'read_time': 2, 'write_time': 37, 'error': 0}, 2: {'error': KeyError('PhysicalDrive2')}}
