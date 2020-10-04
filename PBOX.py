@@ -243,7 +243,7 @@ def menu_interface():
         else:
             compatible = False
         print(f'[{program_id if compatible else len(str(program_id))*"!"}]: {data["program"]["id"][program_id]["name"]} - {data["program"]["id"][program_id]["description"]}')
-        sleep(0.1)
+        sleep(0.05)
     try:
         selected_program = input('\nEnter a number to select a program\n> ')
     except KeyboardInterrupt:
@@ -279,12 +279,12 @@ def menu_interface():
                 exit()
         else:
             print(f'Sorry, {data["program"]["id"][int(selected_program)]["name"]} is not compatible with your OS.')
-            sleep(0.7)
+            sleep(1.2)
     elif selected_program.lower() == 'a program':
         print('Very funny.')
     else:
         print(f'Sorry, "{selected_program}" is not a valid program id"')
-        sleep(0.7)
+        sleep(0.8)
 
 
 
