@@ -82,6 +82,52 @@ pbox_ascii = f""":::::::::  :::::::::   ::::::::  :::    :::
 ###        #########   ########  ###    ###"""
 
 
+def smart_import(module, **kwargs):
+    # https://stackoverflow.com/a/24773951
+    package = kwargs.get('package', module)
+    install_only = kwargs.get('install_only', False)
+    import importlib
+    try:
+        globals()[module] = importlib.import_module(module)  # Try to import the module
+        if install_only:
+            del globals()[module]  # Don't allow the module to be called (essentially un-import it)
+        return True
+    except ImportError:
+        import subprocess, sys
+        print(f'Installing {package}...')
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--user", "--quiet", "--quiet"])
+        except Exception as e:
+            print(f'Unable to install {package}:\n{e}')
+            return False
+    finally:
+        # https://stackoverflow.com/a/25384923
+        import site
+        importlib.reload(site)  # Refresh sys.path
+        try:
+            globals()[module] = importlib.import_module(module)  # Try to import the module
+            if install_only:
+                del globals()[module]  # Don't allow the module to be called (essentially un-import it)
+            return True
+        except ModuleNotFoundError as e:
+            print(f'Unable to import {module}: {e}')
+            return False
+
+
+
+print(pbox_ascii)
+
+# Sentry is used for automatically logging bugs, along with performance data.
+# No personally identifiable information is logged
+if smart_import('sentry_sdk', install_only=True) == True:
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn="https://8fe72b3641fd42d69fdf8e03dc32acc5@o457336.ingest.sentry.io/5453156",
+        traces_sample_rate=1.0,
+        environment="Production",
+        release=data["meta"]["ver"]
+    )
+
 
 def update():
     # -==========[ Update code ]==========-
@@ -179,38 +225,8 @@ def update():
             quit()
     # -==========[ Update code ]==========-
 
-print(pbox_ascii)
 update()
 
-def smart_import(module, **kwargs):
-    # https://stackoverflow.com/a/24773951
-    package = kwargs.get('package', module)
-    install_only = kwargs.get('install_only', False)
-    import importlib
-    try:
-        try:
-            globals()[module] = importlib.import_module(module)  # Try to import the module
-            if install_only:
-                del globals()[module]  # Don't allow the module to be called (essentially un-import it)
-            return True
-        except ImportError:
-            import subprocess, sys
-            print(f'Installing {package}...')
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--user", "--quiet", "--quiet"])
-            except Exception as e:
-                print(f'Unable to install {package}:\n{e}')
-                return False
-        finally:
-            # https://stackoverflow.com/a/25384923
-            import site
-            importlib.reload(site)  # Refresh sys.path
-            if not install_only:
-                globals()[module] = importlib.import_module(module)  # Import the module
-        return True
-    except ModuleNotFoundError as e:
-        print(f'Unable to import {module}: {e}')
-        return False
 
 
 def menu_meta():
@@ -254,16 +270,16 @@ def menu_interface():
             except KeyboardInterrupt:
                 pass
             except Exception as e:
+                sentry_sdk.capture_message(f'Uncaught exception in program {data["program"]["id"][int(selected_program)]["name"]}\n\nException: {e}\n\nFull traceback:\n{traceback.print_exc()}\n\ndata dict state:\n{data}')
                 print(f'\n\n\n\n\n\n\nFatal error occurred: {e}\n\n')
                 print('<----=----=ERROR REPORT=----=---->')
                 print(f'Meta: {data["meta"]}')
-                print(f'Setup status: {data["setup"]}')
+                print(f'OS: {data["setup"]["os"]}')
                 print(f'Selected program: {data["program"]["selected"]}')
-                print(f'Current imports: {list(sys.modules.keys())}')
                 print('<----=Full Traceback:=---->')
                 print(traceback.print_exc())
                 print('<----=----=ERROR REPORT=----=---->\n')
-                print('\nWhoops, we have encountered an error.')
+                print('\nWhoops, we have encountered an error. If you\'re connected to the internet, it should have automatically been logged.')
                 print('\nPlease create a new Github issue and paste the jibberish above')
                 print('Include steps on how to reproduce the error, so we can do the same and know if we have fixed it')
                 input(f'\nPress enter to open the Github Issue page... (github.com/smcclennon/{data["meta"]["name"]}/issues)')
