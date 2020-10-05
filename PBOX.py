@@ -196,15 +196,17 @@ def install_package(package):
 def import_rescue(e):
     if 'No module named' in str(e):
         unknown_module = str(e).replace("'", "").replace("No module named ", "")
-        if data["setup"]["target_package"] == unknown_module:
-            data["setup"]["import_status"] == -1
+        if data["setup"]["target_package"] == unknown_module:  # If the same module still fails to import after install
+            # https://stackoverflow.com/a/12333108
+            # https://stackoverflow.com/a/25384923
+            print('Refreshing sys.path')
+            import site
+            from importlib import reload
+            reload(site)  # Refresh sys.path
         else:
-            data["setup"]["target_package"] == unknown_module
+            data["setup"]["target_package"] = unknown_module
 
         print(f'\nError: unable to import "{unknown_module}"')
-        if data["setup"]["import_status"] == -1:
-            input('Press enter to exit...')
-            exit()
         print('Installing dependancies...')
         try:
             install_package(unknown_module)
