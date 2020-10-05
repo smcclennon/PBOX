@@ -207,8 +207,8 @@ def import_rescue(e):
             data["setup"]["target_package"] = unknown_module
 
         print(f'\nError: unable to import "{unknown_module}"')
-        print('Installing dependancies...')
         try:
+            print('Installing dependancies...')
             install_package(unknown_module)
         except Exception as e:
             print(f'\n{e}\n\nFailed to install "{unknown_module}"\nPress enter to exit...')
