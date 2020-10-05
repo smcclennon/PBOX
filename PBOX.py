@@ -188,36 +188,28 @@ def update():
 print(pbox_ascii)
 update()
 
-
-def install_package(package):
-    subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--user"])
-
-
-def import_rescue(e):
-    if 'No module named' in str(e):
-        unknown_module = str(e).replace("'", "").replace("No module named ", "")
-        if data["setup"]["target_package"] == unknown_module:  # If the same module still fails to import after install
-            # https://stackoverflow.com/a/12333108
-            # https://stackoverflow.com/a/25384923
-            print('Refreshing sys.path')
-            import site
-            from importlib import reload
-            reload(site)  # Refresh sys.path
-        else:
-            data["setup"]["target_package"] = unknown_module
-
-        print(f'\nError: unable to import "{unknown_module}"')
+def smart_import(module, **kwargs):
+    # https://stackoverflow.com/a/24773951
+    package = kwargs.get('package', module)
+    install_only = kwargs.get('install_only', False)
+    import importlib
+    try:
         try:
-            print('Installing dependancies...')
-            install_package(unknown_module)
-        except Exception as e:
-            print(f'\n{e}\n\nFailed to install "{unknown_module}"\nPress enter to exit...')
-            input()
-            exit()
-    else:
-        print(f'{e}\nUnknown error occurred')
-        input('Press enter to exit...')
-        exit()
+            globals()[module] = importlib.import_module(module)  # Try to import the module
+            if install_only:
+                del globals()[module]  # Don't allow the module to be called (essentially un-import it)
+        except ImportError:
+            import subprocess, sys
+            print(f'Installing {package}...          ', end='\r')
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--user", "--quiet", "--quiet"])
+        finally:
+            # https://stackoverflow.com/a/25384923
+            import site
+            importlib.reload(site)  # Refresh sys.path
+            if not install_only:
+                globals()[module] = importlib.import_module(module)  # Import the module
+    except ModuleNotFoundError as e:
+        print(f'Unable to import {module}: {e}')
 
 
 def menu_meta():
@@ -292,17 +284,14 @@ def menu_interface():
 
 
 def program_volute():
-    while data["setup"]["import_status"] != 1:
-        data["setup"]["import_status"] = 0
-        try:
-            import atexit
-            from threading import Thread
-            from ctypes import cast, POINTER
-            from comtypes import CLSCTX_ALL
-            from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-            data["setup"]["import_status"] = 1
-        except ImportError as e:
-            import_rescue(e)
+    import atexit
+    from threading import Thread
+    from ctypes import cast, POINTER
+
+    for package in ['comtypes', 'pycaw']:
+        smart_import(package, install_only=True)
+    from comtypes import CLSCTX_ALL
+    from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
     devices = AudioUtilities.GetSpeakers()
     interface = devices.Activate(
@@ -377,13 +366,8 @@ def program_taskkiller():
         else:
             os.system("taskkill /f /im "+term+" /t")
 def program_systemusage():
-    while data["setup"]["import_status"] != 1:
-        data["setup"]["import_status"] = 0
-        try:
-            import psutil
-            data["setup"]["import_status"] = 1
-        except ImportError as e:
-            import_rescue(e)
+    smart_import('psutil', install_only=True)
+    import psutil
     while True:
         ram = dict(psutil.virtual_memory()._asdict())  # {'total': 8507539456, 'available': 1167245312, 'percent': 86.3, 'used': 7340294144, 'free': 1167245312}
         swap = dict(psutil.swap_memory()._asdict())  # (total=2097147904, used=296128512, free=1801019392, percent=14.1, sin=304193536, sout=677842944)
