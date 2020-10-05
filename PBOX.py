@@ -198,18 +198,25 @@ def smart_import(module, **kwargs):
             globals()[module] = importlib.import_module(module)  # Try to import the module
             if install_only:
                 del globals()[module]  # Don't allow the module to be called (essentially un-import it)
+            return True
         except ImportError:
             import subprocess, sys
-            print(f'Installing {package}...          ', end='\r')
-            subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--user", "--quiet", "--quiet"])
+            print(f'Installing {package}...')
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--user", "--quiet", "--quiet"])
+            except Exception as e:
+                print(f'Unable to install {package}:\n{e}')
+                return False
         finally:
             # https://stackoverflow.com/a/25384923
             import site
             importlib.reload(site)  # Refresh sys.path
             if not install_only:
                 globals()[module] = importlib.import_module(module)  # Import the module
+        return True
     except ModuleNotFoundError as e:
         print(f'Unable to import {module}: {e}')
+        return False
 
 
 def menu_meta():
@@ -288,8 +295,13 @@ def program_volute():
     from threading import Thread
     from ctypes import cast, POINTER
 
-    for package in ['comtypes', 'pycaw']:
-        smart_import(package, install_only=True)
+
+    if (
+        smart_import('comtypes', install_only=True) != True
+        or
+        smart_import('pycaw', install_only=True) != True):
+        sleep(5)
+        return
     from comtypes import CLSCTX_ALL
     from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
@@ -366,7 +378,9 @@ def program_taskkiller():
         else:
             os.system("taskkill /f /im "+term+" /t")
 def program_systemusage():
-    smart_import('psutil', install_only=True)
+    if smart_import('psutil', install_only=True) != True:
+        sleep(5)
+        return
     import psutil
     while True:
         ram = dict(psutil.virtual_memory()._asdict())  # {'total': 8507539456, 'available': 1167245312, 'percent': 86.3, 'used': 7340294144, 'free': 1167245312}
