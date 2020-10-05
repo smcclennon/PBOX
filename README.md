@@ -16,7 +16,7 @@ Some tools within PBOX have come from my other repository, [PYBY-Toolbox](https:
 - Intuitive menu system. Exit any PBOX program (except Pshell) with a Keyboard Interrupt (`CTRL+C`) and return to the PBOX menu
 
 ## Installation
-Download the [**Latest Release**](https://github.com/smcclennon/PBOX/releases/latest/download/PBOX.py) or save the [`Master raw file`](https://raw.githubusercontent.com/smcclennon/PBOX/master/PBOX.py) (or the [`dev raw file`](https://raw.githubusercontent.com/smcclennon/PBOX/dev/PBOX.py) to test new features, may be unstable)
+Download the [**Latest Release**](https://github.com/smcclennon/PBOX/releases/latest/download/PBOX.py) or save the [`Master raw file`](https://raw.githubusercontent.com/smcclennon/PBOX/main/PBOX.py) (or the [`dev raw file`](https://raw.githubusercontent.com/smcclennon/PBOX/dev/PBOX.py) to test new features, may be unstable)
 
 #### Requirements:
 - Python 3.6+
