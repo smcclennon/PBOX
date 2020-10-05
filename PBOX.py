@@ -9,7 +9,7 @@ def reset_data():
     data = {
         "meta": {
             "name": "PBOX",
-            "ver": "0.0.0",
+            "ver": "0.0.1",
             "id": "6"
         },
         "setup": {
@@ -196,17 +196,19 @@ def install_package(package):
 def import_rescue(e):
     if 'No module named' in str(e):
         unknown_module = str(e).replace("'", "").replace("No module named ", "")
-        if data["setup"]["target_package"] == unknown_module:
-            data["setup"]["import_status"] == -1
+        if data["setup"]["target_package"] == unknown_module:  # If the same module still fails to import after install
+            # https://stackoverflow.com/a/12333108
+            # https://stackoverflow.com/a/25384923
+            print('Refreshing sys.path')
+            import site
+            from importlib import reload
+            reload(site)  # Refresh sys.path
         else:
-            data["setup"]["target_package"] == unknown_module
+            data["setup"]["target_package"] = unknown_module
 
         print(f'\nError: unable to import "{unknown_module}"')
-        if data["setup"]["import_status"] == -1:
-            input('Press enter to exit...')
-            exit()
-        print('Installing dependancies...')
         try:
+            print('Installing dependancies...')
             install_package(unknown_module)
         except Exception as e:
             print(f'\n{e}\n\nFailed to install "{unknown_module}"\nPress enter to exit...')
@@ -243,7 +245,7 @@ def menu_interface():
         else:
             compatible = False
         print(f'[{program_id if compatible else len(str(program_id))*"!"}]: {data["program"]["id"][program_id]["name"]} - {data["program"]["id"][program_id]["description"]}')
-        sleep(0.1)
+        sleep(0.05)
     try:
         selected_program = input('\nEnter a number to select a program\n> ')
     except KeyboardInterrupt:
@@ -279,10 +281,13 @@ def menu_interface():
                 exit()
         else:
             print(f'Sorry, {data["program"]["id"][int(selected_program)]["name"]} is not compatible with your OS.')
-            sleep(0.7)
+            sleep(1.2)
+    elif selected_program.lower() == 'a number':
+        print('Very funny.')
+        sleep(0.8)
     else:
         print(f'Sorry, "{selected_program}" is not a valid program id"')
-        sleep(0.7)
+        sleep(0.8)
 
 
 
@@ -397,7 +402,7 @@ def program_systemusage():
             disk_partitions[i]["opts"] = disk_partitions[i]["opts"].split(',')
             if disk_partitions[i]["opts"][0] == 'rw':
                 disk_partitions[i]["opts"][0] = 'Read/Write'
-            elif disk_partitions[i]["opts"][0] == 'r':
+            elif disk_partitions[i]["opts"][0] == 'ro':
                 disk_partitions[i]["opts"][0] = 'Read only'
             try:
                 disk_io[i] = psutil.disk_io_counters(perdisk=True)[f"PhysicalDrive{i}"]._asdict()  # {0: {'read_count': 3849381, 'write_count': 3138262, 'read_bytes': 93119674368, 'write_bytes': 88870555136, 'read_time': 2227, 'write_time': 1318, 'error': 0}, 1: {'read_count': 238, 'write_count': 123, 'read_bytes': 2912256, 'write_bytes': 569344, 'read_time': 2, 'write_time': 37, 'error': 0}, 2: {'error': KeyError('PhysicalDrive2')}}

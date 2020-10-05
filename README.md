@@ -16,20 +16,20 @@ Some tools within PBOX have come from my other repository, [PYBY-Toolbox](https:
 - Intuitive menu system. Exit any PBOX program (except Pshell) with a Keyboard Interrupt (`CTRL+C`) and return to the PBOX menu
 
 ## Installation
-Download the [Latest Release](https://github.com/smcclennon/PBOX/releases/latest/download/PBOX.py) or save the [Latest Raw File](https://raw.githubusercontent.com/smcclennon/PBOX/master/PBOX.py)
+Download the [**Latest Release**](https://github.com/smcclennon/PBOX/releases/latest/download/PBOX.py) or save the [`Master raw file`](https://raw.githubusercontent.com/smcclennon/PBOX/main/PBOX.py) (or the [`dev raw file`](https://raw.githubusercontent.com/smcclennon/PBOX/dev/PBOX.py) to test new features, may be unstable)
 
 #### Requirements:
 - Python 3.6+
 - Windows 10 for all features, Linux/MacOS for limited features
 
 ## Programs available in PBOX
-|Script|OS|About
-|:-:|:-:|:-|
-|Volute|Windows Only|Force unmute your system by using multiple threads to continuously unmute your system sound|
-|Task Killer|Windows Only|List running task image names, PIDs, memory usage and more; kill tasks via their image name|
-|Pshell|Windows Only|Call `powershell.exe` from within python|
-|Terminal|Windows Only|Run Command Prompt commands via `os.system` and print the output. Bypass "Command Prompt disabled by your administrator". Does not support changing directory.|
-|System Usage|Windows, Linux, MacOS|View CPU usage for each core; memory and swap usage; all fixed and removable disks storage usage, session read/write totals; IP address for each network adapter, session download/upload totals|
+|Script|OS|About|Usage case|
+|:-:|:-:|:-|:--|
+|Volute|Windows Only|Force unmute your system by using multiple threads to continuously unmute your system sound|A volume block as been put in place but you require audio, for example personal music or a video on an online course|
+|Task Killer|Windows Only|List running task image names, PIDs, memory usage and more; kill tasks via their image name|Task manager has been disabled or placed behind UAC, and there is a runaway task or a hidden/background task you don't need running that is using resources|
+|Pshell|Windows Only|Call `powershell.exe` from within python|Command Prompt/PwrShell  have been disabled and you require a full-feature command line|
+|Terminal|Windows Only|Run Command Prompt commands via `os.system` and print the output. Bypass "Command Prompt disabled by your administrator". Does not support changing directory.|Command Prompt has been disabled and you require a basic command line (with no current working directory changing support)
+|System Usage|Windows, Linux, MacOS|View CPU usage for each core; memory and swap usage; all fixed and removable disks storage usage, session read/write totals; IP address for each network adapter, session download/upload totals|Task manager has been disabled and you would like to view system resource usage|
 
 ## Screenshots
 |Program|Image|
