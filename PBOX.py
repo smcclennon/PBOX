@@ -13,9 +13,7 @@ def reset_data():
             "id": "6"
         },
         "setup": {
-            "os": os.name,
-            "import_status": 0,
-            "target_package": ""
+            "os": (os.name)
         },
         "program": {
             "id": {
@@ -65,11 +63,7 @@ def reset_data():
                         "supported_os": ['nt', 'posix']
                     },
                     "settings": {
-                        "delay": 1,
-                        "cpu": True,
-                        "ram": True,
-                        "disk": True,
-                        "network": True
+                        "delay": 1
                     }
                 }
             },
