@@ -296,10 +296,8 @@ def program_volute():
     from ctypes import cast, POINTER
 
 
-    if (
-        smart_import('comtypes', install_only=True) != True
-        or
-        smart_import('pycaw', install_only=True) != True):
+    if (smart_import('comtypes', install_only=True) != True
+    or smart_import('pycaw', install_only=True) != True):
         sleep(5)
         return
     from comtypes import CLSCTX_ALL
