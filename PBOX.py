@@ -10,7 +10,12 @@ def reset_data():
         "meta": {
             "name": "PBOX",
             "ver": "0.0.1",
-            "id": "6"
+            "id": "6",
+            "sentry": {
+                "share_ip": True,  # Used to track unique cases of envountered errors
+                "import_success": False,
+                "dsn": "https://8fe72b3641fd42d69fdf8e03dc32acc5@o457336.ingest.sentry.io/5453156"
+            }
         },
         "setup": {
             "os": (os.name)
@@ -117,16 +122,99 @@ def smart_import(module, **kwargs):
 
 print(pbox_ascii)
 
-# Sentry is used for automatically logging bugs, along with performance data.
-# No personally identifiable information is logged
-if smart_import('sentry_sdk', install_only=True) == True:
+# Initialise Sentry
+# We use Sentry to automatically log bugs
+if smart_import('sentry_sdk', install_only=True):
+    print('Initialising Sentry...', end='\r')
     import sentry_sdk
     sentry_sdk.init(
-        dsn="https://8fe72b3641fd42d69fdf8e03dc32acc5@o457336.ingest.sentry.io/5453156",
+        dsn=data["meta"]["sentry"]["dsn"],
+        sample_rate=1.0,
         traces_sample_rate=1.0,
-        environment="Production",
-        release=data["meta"]["ver"]
+        release=data["meta"]["name"]+'-'+data["meta"]["ver"],
+        attach_stacktrace=True,
+        with_locals=True
     )
+    data["meta"]["sentry"]["import_success"] = True
+    import platform
+    with sentry_sdk.configure_scope() as scope:
+        scope.set_context("OS", {
+            "Platform": platform.platform(),
+            "System": platform.system(),
+            "Release": platform.release(),
+            "Version": platform.version(),
+            "Machine": platform.machine()
+        })
+        scope.set_context("data dict", {
+            "all": data
+        })
+        if data["meta"]["sentry"]["share_ip"]:
+            import urllib.request
+            try:
+                print('Obtaining IP...       ', end='\r')
+                scope.user = {"ip_address": urllib.request.urlopen('http://ip.42.pl/raw').read()}
+            except:
+                pass
+
+    def bug_send(event_id, name, email, comments):
+        url = f'https://sentry.io/api/0/projects/smcclennon/pbox/user-feedback/'
+        headers = {'Authorization': f'DSN {data["meta"]["sentry"]["dsn"]}'}
+        payload = {
+            "event_id": str(event_id),
+            "name": str(name),
+            "email": str(email),
+            "comments": str(comments)
+        }
+        if smart_import('requests', install_only=True):
+            import requests
+            response = requests.post(url, headers=headers, data=payload)
+            return response
+        else:
+            return 'ImportError'
+
+def bug_report():
+    if data["meta"]["sentry"]["import_success"]:
+        event_id = sentry_sdk.last_event_id()
+        if event_id != None:
+            print(f'\n\nWe\'ve encountered an error. (event_id: {event_id})')
+            print('Would you like to fill in a quick bug report so we can fix the bug quicker?')
+            try:
+                bug_report_consent = input('Fill in bug report [Y/n]: ').upper()
+            except KeyboardInterrupt:
+                bug_report_consent = 'N'
+            if bug_report_consent != 'N':
+                try:
+                    print('\n[1/3] Please enter your name')
+                    name = input('Name: ')
+                    print('\n[2/3] Please enter a valid email address (if you don\'t, we won\'t receive the report!)')
+                    email = input('Email: ')
+                    print('\n[3/3] Please tell us about the bug and how to reproduce it')
+                    comments = input('Bug details: ')
+                except KeyboardInterrupt:
+                    return
+
+                print('Sending bug report...')
+                try:
+                    response = bug_send(event_id, name, email, comments)
+                    if str(response) == '<Response [200]>':
+                        print(f'Bug report sent successfully! Thank you for helping contribute towards {data["meta"]["name"]}')
+                    elif str(response) == '<Response [400]>':
+                        print('We weren\'t able to recieve your bug report because there was a problem with it. This is typically a blank or invalid field')
+                    elif str(response) == 'ImportError':
+                        print('We were unable to import required modules for sending the bug report')
+                    elif response != None:
+                        print(f'We weren\'t able to recieve your bug report: {response.status_code} {response.reason}')
+                    else:
+                        print(f'We weren\'t able to recieve your bug report')
+                except (KeyboardInterrupt, SystemExit):
+                    pass
+                except:
+                    print('Unable to send bug report')
+            else:
+                return
+    else:
+        print('A bug has been encountered, however we are unable to report it because Sentry failed to initialise')
+
 
 
 def update():
@@ -244,7 +332,6 @@ def program_meta():
 
 def menu_interface():
     menu_meta()
-    reset_data()
     valid_id = []
     print('')
     for program_id in data["program"]["id"]:
@@ -269,25 +356,6 @@ def menu_interface():
                 eval(data["program"]["id"][int(selected_program)]["function"])
             except KeyboardInterrupt:
                 pass
-            except Exception as e:
-                sentry_sdk.capture_message(f'Uncaught exception in program {data["program"]["id"][int(selected_program)]["name"]}\n\nException: {e}\n\nFull traceback:\n{traceback.print_exc()}\n\ndata dict state:\n{data}')
-                print(f'\n\n\n\n\n\n\nFatal error occurred: {e}\n\n')
-                print('<----=----=ERROR REPORT=----=---->')
-                print(f'Meta: {data["meta"]}')
-                print(f'OS: {data["setup"]["os"]}')
-                print(f'Selected program: {data["program"]["selected"]}')
-                print('<----=Full Traceback:=---->')
-                print(traceback.print_exc())
-                print('<----=----=ERROR REPORT=----=---->\n')
-                print('\nWhoops, we have encountered an error. If you\'re connected to the internet, it should have automatically been logged.')
-                print('\nPlease create a new Github issue and paste the jibberish above')
-                print('Include steps on how to reproduce the error, so we can do the same and know if we have fixed it')
-                input(f'\nPress enter to open the Github Issue page... (github.com/smcclennon/{data["meta"]["name"]}/issues)')
-                import webbrowser
-                webbrowser.open(f'https://github.com/smcclennon/{data["meta"]["name"]}/issues/new')
-                print('Webpage open. Please check your browser!')
-                input('\nPress enter again to exit...')
-                exit()
         else:
             print(f'Sorry, {data["program"]["id"][int(selected_program)]["name"]} is not compatible with your OS.')
             sleep(1.2)
@@ -319,13 +387,13 @@ def program_volute():
     volume = cast(interface, POINTER(IAudioEndpointVolume))
 
     run = True
-    def exit_handler():
+    def request_threads_stop():
         print('Shutting down Volute...')
         run = False
-    atexit.register(exit_handler)
+    atexit.register(request_threads_stop)
 
     def unmuteThread():
-        while run == True:
+        while run:
             volume.SetMute(0, None)
 
     print(f'Creating {data["program"]["id"][1]["settings"]["threads"]} threads...')
@@ -341,8 +409,9 @@ def program_volute():
         input()
     except KeyboardInterrupt:
         pass
+    print('Shutting down Volute...')
     run = False
-    atexit.unregister(exit_handler)
+    atexit.unregister(request_threads_stop)
 
 def program_pshell():
     #os.system('color 1f')
@@ -487,5 +556,14 @@ def program_systemusage():
 
 
 if __name__ == "__main__":
-    while True:
-        menu_interface()
+    try:
+        while True:
+            menu_interface()
+    except Exception as e:
+        if data["meta"]["sentry"]["import_success"]:
+            sentry_sdk.capture_exception(e)
+        traceback.print_exc()
+        bug_report()
+
+    input('\n\nPress enter to exit')
+    os._exit(1)  # force kill task and all threads
