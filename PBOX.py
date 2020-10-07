@@ -1,6 +1,6 @@
 # PBOX - Python Toolbox
 # github.com/smcclennon/PBOX
-import subprocess, sys, os, traceback
+import os, traceback
 from time import sleep
 
 
@@ -434,6 +434,7 @@ def program_pshell():
 def program_terminal():
     os.system('ver')
     print('(c) Microsoft Corporation. All rights reserved.\n')
+    import subprocess
     while True:
         cwd = subprocess.getoutput('echo %cd%')
         try:
