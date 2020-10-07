@@ -131,7 +131,7 @@ if smart_import('sentry_sdk', install_only=True):
         dsn=data["meta"]["sentry"]["dsn"],
         sample_rate=1.0,
         traces_sample_rate=1.0,
-        release=data["meta"]["name"]+'-'+data["meta"]["ver"],
+        #release=data["meta"]["name"]+'-'+data["meta"]["ver"],
         attach_stacktrace=True,
         with_locals=True
     )
@@ -574,6 +574,7 @@ def program_systemusage():
 
 if __name__ == "__main__":
     try:
+        x = 1/0
         while True:
             menu_interface()
     except Exception as e:
