@@ -1,82 +1,78 @@
 # PBOX - Python Toolbox
 # github.com/smcclennon/PBOX
-import subprocess, sys, os, traceback
+import os, traceback
 from time import sleep
 
-data = {}
-def reset_data():
-    global data
-    data = {
-        "meta": {
-            "name": "PBOX",
-            "ver": "0.0.1",
-            "id": "6"
-        },
-        "setup": {
-            "os": os.name,
-            "import_status": 0,
-            "target_package": ""
-        },
-        "program": {
-            "id": {
-                1: {
-                    "name": "Volute",
-                    "description": "Force unmute your system audio",
-                    "function": "program_volute()",  # eval(data["program"]["id"][1]["function"])
-                    "compatibility": {
-                        "supported_os": ['nt']
-                    },
-                    "settings": {
-                        "threads": 2
-                    }
+
+data = {
+    "meta": {
+        "name": "PBOX",
+        "ver": "0.1.0",
+        "id": "6",
+        "sentry": {
+            "share_ip": True,  # Used to track unique cases of envountered errors
+            "import_success": False,
+            "dsn": "https://8fe72b3641fd42d69fdf8e03dc32acc5@o457336.ingest.sentry.io/5453156"
+        }
+    },
+    "setup": {
+        "os": (os.name)
+    },
+    "program": {
+        "id": {
+            1: {
+                "name": "Volute",
+                "description": "Force unmute your system audio",
+                "function": "program_volute()",  # eval(data["program"]["id"][1]["function"])
+                "compatibility": {
+                    "supported_os": ['nt']
                 },
-                2: {
-                    "name": "Task Killer",
-                    "description": "View and kill running processes",
-                    "function": "program_taskkiller()",
-                    "compatibility": {
-                        "supported_os": ['nt']
-                    },
-                    "settings": {
-                        "mode": "basic"
-                    }
-                },
-                3: {
-                    "name": "Pshell",
-                    "description": "Full-fledged P0wersh3ll",
-                    "compatibility": {
-                        "supported_os": ['nt']
-                    },
-                    "function": "program_pshell()"
-                },
-                4: {
-                    "name": "Terminal",
-                    "description": "Command prompt (cannot change current working directory!)",
-                    "compatibility": {
-                        "supported_os": ['nt']
-                    },
-                    "function": "program_terminal()"
-                },
-                5: {
-                    "name": "System Usage",
-                    "description": "Basic CPU/RAM usage info",
-                    "function": "program_systemusage()",
-                    "compatibility": {
-                        "supported_os": ['nt', 'posix']
-                    },
-                    "settings": {
-                        "delay": 1,
-                        "cpu": True,
-                        "ram": True,
-                        "disk": True,
-                        "network": True
-                    }
+                "settings": {
+                    "threads": 2
                 }
             },
-            "selected": 0
-        }
+            2: {
+                "name": "Task Killer",
+                "description": "View and kill running processes",
+                "function": "program_taskkiller()",
+                "compatibility": {
+                    "supported_os": ['nt']
+                },
+                "settings": {
+                    "mode": "basic"
+                }
+            },
+            3: {
+                "name": "Pshell",
+                "description": "Full-fledged P0wersh3ll",
+                "compatibility": {
+                    "supported_os": ['nt']
+                },
+                "function": "program_pshell()"
+            },
+            4: {
+                "name": "Terminal",
+                "description": "Command prompt (cannot change current working directory!)",
+                "compatibility": {
+                    "supported_os": ['nt']
+                },
+                "function": "program_terminal()"
+            },
+            5: {
+                "name": "System Usage",
+                "description": "Basic CPU/RAM usage info",
+                "function": "program_systemusage()",
+                "compatibility": {
+                    "supported_os": ['nt', 'posix']
+                },
+                "settings": {
+                    "delay": 1
+                }
+            }
+        },
+        "selected": 0
     }
-reset_data()
+}
 
 
 pbox_ascii = f""":::::::::  :::::::::   ::::::::  :::    :::
@@ -86,6 +82,152 @@ pbox_ascii = f""":::::::::  :::::::::   ::::::::  :::    :::
 +#+        +#+    +#+ +#+    +#+  +#+  +#+
 #+#        #+#    #+# #+#    #+# #+#    #+#
 ###        #########   ########  ###    ###"""
+
+
+def smart_import(module, **kwargs):
+    # https://stackoverflow.com/a/24773951
+    package = kwargs.get('package', module)
+    install_only = kwargs.get('install_only', False)
+    import importlib
+    try:
+        globals()[module] = importlib.import_module(module)  # Try to import the module
+        if install_only:
+            del globals()[module]  # Don't allow the module to be called (essentially un-import it)
+        return True
+    except ImportError:
+        import subprocess, sys
+        print(f'Installing {package}...')
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--user", "--quiet", "--quiet"])
+        except Exception as e:
+            print(f'Unable to install {package}:\n{e}')
+            return False
+    finally:
+        # https://stackoverflow.com/a/25384923
+        import site
+        importlib.reload(site)  # Refresh sys.path
+        try:
+            globals()[module] = importlib.import_module(module)  # Try to import the module
+            if install_only:
+                del globals()[module]  # Don't allow the module to be called (essentially un-import it)
+            return True
+        except ModuleNotFoundError as e:
+            print(f'Unable to import {module}: {e}')
+            return False
+
+
+
+print(pbox_ascii)
+
+# Initialise Sentry
+# We use Sentry to automatically log bugs
+if smart_import('sentry_sdk', install_only=True):
+    print('Initialising Sentry...', end='\r')
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn=data["meta"]["sentry"]["dsn"],
+        sample_rate=1.0,
+        traces_sample_rate=1.0,
+        release=data["meta"]["name"]+'-'+data["meta"]["ver"],
+        attach_stacktrace=True,
+        with_locals=True
+    )
+    data["meta"]["sentry"]["import_success"] = True
+    import platform
+    with sentry_sdk.configure_scope() as scope:
+        scope.set_context("OS", {
+            "Platform": platform.platform(),
+            "System": platform.system(),
+            "Release": platform.release(),
+            "Version": platform.version(),
+            "Machine": platform.machine()
+        })
+        scope.set_context("data dict", {
+            "all": data
+        })
+        if data["meta"]["sentry"]["share_ip"]:
+            import urllib.request
+            try:
+                print('Obtaining IP...       ', end='\r')
+                scope.user = {"ip_address": urllib.request.urlopen('http://ip.42.pl/raw').read()}
+            except:
+                pass
+
+    def bug_send(event_id, name, email, comments):
+        url = 'https://sentry.io/api/0/projects/smcclennon/pbox/user-feedback/'
+        headers = {'Authorization': f'DSN {data["meta"]["sentry"]["dsn"]}'}
+        payload = {
+            "event_id": str(event_id),
+            "name": str(name),
+            "email": str(email),
+            "comments": str(comments)
+        }
+        if smart_import('requests', install_only=True):
+            import requests
+            response = requests.post(url, headers=headers, data=payload)
+            return response
+        else:
+            return 'ImportError'
+
+def bug_report():
+    if data["meta"]["sentry"]["import_success"]:
+        event_id = sentry_sdk.last_event_id()
+        if event_id != None:
+            print(f'\n\nWe\'ve encountered an error. (event_id: {event_id})')
+            print('Would you like to fill in a quick bug report so we can fix the bug quicker?')
+            try:
+                bug_report_consent = input('Fill in bug report [Y/n]: ').upper()
+            except KeyboardInterrupt:
+                bug_report_consent = 'N'
+            if bug_report_consent != 'N':
+                try:
+                    while True:
+                        print('\n[1/3] Please enter your name')
+                        name = input('Name: ')
+                        if len(name) > 0:
+                            break
+                        else:
+                            print('**Please don\'t leave this field blank**')
+                    import re
+                    while True:
+                        print('\n[2/3] Please enter your email address (we\'ll use this to get back to you regarding your bug report)')
+                        email = input('Email: ')
+                        if email != None and re.match('[^@]+@[^@]+\.[^@]+', email):
+                            break
+                        else:
+                            print('**Please enter a valid email address**')
+                    while True:
+                        print('\n[3/3] Please tell us about the bug and how to reproduce it\nAdd any details that you think may help us find what\'s causing the bug\nIf you can remember, please include steps to reproduce the bug')
+                        comments = input('Bug details: ')
+                        if comments != None and len(comments) >= 10:
+                            break
+                        else:
+                            print('**Please type at least 10 characters**')
+                except KeyboardInterrupt:
+                    print('Bug report cancelled')
+                    return
+
+                print('Sending bug report...')
+                try:
+                    response = bug_send(event_id, name, email, comments)
+                    if str(response) == '<Response [200]>':
+                        print(f'Bug report sent successfully! Thank you for helping contribute towards {data["meta"]["name"]}')
+                    elif str(response) == '<Response [400]>':
+                        print('We weren\'t able to recieve your bug report because there was a problem with it. This is typically an invalid field')
+                    elif str(response) == 'ImportError':
+                        print('We were unable to import required modules for sending the bug report')
+                    elif response != None:
+                        print(f'We weren\'t able to recieve your bug report: {response.status_code} {response.reason}')
+                    else:
+                        print('We weren\'t able to recieve your bug report')
+                except (KeyboardInterrupt, SystemExit):
+                    pass
+                except:
+                    print('Unable to send bug report')
+            else:
+                return
+    else:
+        print('A bug has been encountered, however we are unable to report it because Sentry failed to initialise')
 
 
 
@@ -185,39 +327,8 @@ def update():
             quit()
     # -==========[ Update code ]==========-
 
-print(pbox_ascii)
 update()
 
-
-def install_package(package):
-    subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--user"])
-
-
-def import_rescue(e):
-    if 'No module named' in str(e):
-        unknown_module = str(e).replace("'", "").replace("No module named ", "")
-        if data["setup"]["target_package"] == unknown_module:  # If the same module still fails to import after install
-            # https://stackoverflow.com/a/12333108
-            # https://stackoverflow.com/a/25384923
-            print('Refreshing sys.path')
-            import site
-            from importlib import reload
-            reload(site)  # Refresh sys.path
-        else:
-            data["setup"]["target_package"] = unknown_module
-
-        print(f'\nError: unable to import "{unknown_module}"')
-        try:
-            print('Installing dependancies...')
-            install_package(unknown_module)
-        except Exception as e:
-            print(f'\n{e}\n\nFailed to install "{unknown_module}"\nPress enter to exit...')
-            input()
-            exit()
-    else:
-        print(f'{e}\nUnknown error occurred')
-        input('Press enter to exit...')
-        exit()
 
 
 def menu_meta():
@@ -235,7 +346,6 @@ def program_meta():
 
 def menu_interface():
     menu_meta()
-    reset_data()
     valid_id = []
     print('')
     for program_id in data["program"]["id"]:
@@ -260,25 +370,6 @@ def menu_interface():
                 eval(data["program"]["id"][int(selected_program)]["function"])
             except KeyboardInterrupt:
                 pass
-            except Exception as e:
-                print(f'\n\n\n\n\n\n\nFatal error occurred: {e}\n\n')
-                print('<----=----=ERROR REPORT=----=---->')
-                print(f'Meta: {data["meta"]}')
-                print(f'Setup status: {data["setup"]}')
-                print(f'Selected program: {data["program"]["selected"]}')
-                print(f'Current imports: {list(sys.modules.keys())}')
-                print('<----=Full Traceback:=---->')
-                print(traceback.print_exc())
-                print('<----=----=ERROR REPORT=----=---->\n')
-                print('\nWhoops, we have encountered an error.')
-                print('\nPlease create a new Github issue and paste the jibberish above')
-                print('Include steps on how to reproduce the error, so we can do the same and know if we have fixed it')
-                input(f'\nPress enter to open the Github Issue page... (github.com/smcclennon/{data["meta"]["name"]}/issues)')
-                import webbrowser
-                webbrowser.open(f'https://github.com/smcclennon/{data["meta"]["name"]}/issues/new')
-                print('Webpage open. Please check your browser!')
-                input('\nPress enter again to exit...')
-                exit()
         else:
             print(f'Sorry, {data["program"]["id"][int(selected_program)]["name"]} is not compatible with your OS.')
             sleep(1.2)
@@ -292,17 +383,17 @@ def menu_interface():
 
 
 def program_volute():
-    while data["setup"]["import_status"] != 1:
-        data["setup"]["import_status"] = 0
-        try:
-            import atexit
-            from threading import Thread
-            from ctypes import cast, POINTER
-            from comtypes import CLSCTX_ALL
-            from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-            data["setup"]["import_status"] = 1
-        except ImportError as e:
-            import_rescue(e)
+    import atexit
+    from threading import Thread
+    from ctypes import cast, POINTER
+
+
+    if (smart_import('comtypes', install_only=True) != True
+    or smart_import('pycaw', install_only=True) != True):
+        sleep(5)
+        return
+    from comtypes import CLSCTX_ALL
+    from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
     devices = AudioUtilities.GetSpeakers()
     interface = devices.Activate(
@@ -310,13 +401,13 @@ def program_volute():
     volume = cast(interface, POINTER(IAudioEndpointVolume))
 
     run = True
-    def exit_handler():
+    def request_threads_stop():
         print('Shutting down Volute...')
         run = False
-    atexit.register(exit_handler)
+    atexit.register(request_threads_stop)
 
     def unmuteThread():
-        while run == True:
+        while run:
             volume.SetMute(0, None)
 
     print(f'Creating {data["program"]["id"][1]["settings"]["threads"]} threads...')
@@ -332,8 +423,9 @@ def program_volute():
         input()
     except KeyboardInterrupt:
         pass
+    print('Shutting down Volute...')
     run = False
-    atexit.unregister(exit_handler)
+    atexit.unregister(request_threads_stop)
 
 def program_pshell():
     #os.system('color 1f')
@@ -342,6 +434,7 @@ def program_pshell():
 def program_terminal():
     os.system('ver')
     print('(c) Microsoft Corporation. All rights reserved.\n')
+    import subprocess
     while True:
         cwd = subprocess.getoutput('echo %cd%')
         try:
@@ -377,13 +470,10 @@ def program_taskkiller():
         else:
             os.system("taskkill /f /im "+term+" /t")
 def program_systemusage():
-    while data["setup"]["import_status"] != 1:
-        data["setup"]["import_status"] = 0
-        try:
-            import psutil
-            data["setup"]["import_status"] = 1
-        except ImportError as e:
-            import_rescue(e)
+    if smart_import('psutil', install_only=True) != True:
+        sleep(5)
+        return
+    import psutil
     while True:
         ram = dict(psutil.virtual_memory()._asdict())  # {'total': 8507539456, 'available': 1167245312, 'percent': 86.3, 'used': 7340294144, 'free': 1167245312}
         swap = dict(psutil.swap_memory()._asdict())  # (total=2097147904, used=296128512, free=1801019392, percent=14.1, sin=304193536, sout=677842944)
@@ -481,5 +571,14 @@ def program_systemusage():
 
 
 if __name__ == "__main__":
-    while True:
-        menu_interface()
+    try:
+        while True:
+            menu_interface()
+    except Exception as e:
+        if data["meta"]["sentry"]["import_success"]:
+            sentry_sdk.capture_exception(e)
+        traceback.print_exc()
+        bug_report()
+
+    input('\n\nPress enter to exit')
+    os._exit(1)  # force kill task and all threads
