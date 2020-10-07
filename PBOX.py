@@ -154,7 +154,7 @@ if smart_import('sentry_sdk', install_only=True):
                 pass
 
     def bug_send(event_id, name, email, comments):
-        url = f'https://sentry.io/api/0/projects/smcclennon/pbox/user-feedback/'
+        url = 'https://sentry.io/api/0/projects/smcclennon/pbox/user-feedback/'
         headers = {'Authorization': f'DSN {data["meta"]["sentry"]["dsn"]}'}
         payload = {
             "event_id": str(event_id),
@@ -219,7 +219,7 @@ def bug_report():
                     elif response != None:
                         print(f'We weren\'t able to recieve your bug report: {response.status_code} {response.reason}')
                     else:
-                        print(f'We weren\'t able to recieve your bug report')
+                        print('We weren\'t able to recieve your bug report')
                 except (KeyboardInterrupt, SystemExit):
                     pass
                 except:
