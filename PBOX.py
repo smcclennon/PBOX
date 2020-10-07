@@ -3,79 +3,76 @@
 import subprocess, sys, os, traceback
 from time import sleep
 
-data = {}
-def reset_data():
-    global data
-    data = {
-        "meta": {
-            "name": "PBOX",
-            "ver": "0.1.0",
-            "id": "6",
-            "sentry": {
-                "share_ip": True,  # Used to track unique cases of envountered errors
-                "import_success": False,
-                "dsn": "https://8fe72b3641fd42d69fdf8e03dc32acc5@o457336.ingest.sentry.io/5453156"
-            }
-        },
-        "setup": {
-            "os": (os.name)
-        },
-        "program": {
-            "id": {
-                1: {
-                    "name": "Volute",
-                    "description": "Force unmute your system audio",
-                    "function": "program_volute()",  # eval(data["program"]["id"][1]["function"])
-                    "compatibility": {
-                        "supported_os": ['nt']
-                    },
-                    "settings": {
-                        "threads": 2
-                    }
+
+data = {
+    "meta": {
+        "name": "PBOX",
+        "ver": "0.1.0",
+        "id": "6",
+        "sentry": {
+            "share_ip": True,  # Used to track unique cases of envountered errors
+            "import_success": False,
+            "dsn": "https://8fe72b3641fd42d69fdf8e03dc32acc5@o457336.ingest.sentry.io/5453156"
+        }
+    },
+    "setup": {
+        "os": (os.name)
+    },
+    "program": {
+        "id": {
+            1: {
+                "name": "Volute",
+                "description": "Force unmute your system audio",
+                "function": "program_volute()",  # eval(data["program"]["id"][1]["function"])
+                "compatibility": {
+                    "supported_os": ['nt']
                 },
-                2: {
-                    "name": "Task Killer",
-                    "description": "View and kill running processes",
-                    "function": "program_taskkiller()",
-                    "compatibility": {
-                        "supported_os": ['nt']
-                    },
-                    "settings": {
-                        "mode": "basic"
-                    }
-                },
-                3: {
-                    "name": "Pshell",
-                    "description": "Full-fledged P0wersh3ll",
-                    "compatibility": {
-                        "supported_os": ['nt']
-                    },
-                    "function": "program_pshell()"
-                },
-                4: {
-                    "name": "Terminal",
-                    "description": "Command prompt (cannot change current working directory!)",
-                    "compatibility": {
-                        "supported_os": ['nt']
-                    },
-                    "function": "program_terminal()"
-                },
-                5: {
-                    "name": "System Usage",
-                    "description": "Basic CPU/RAM usage info",
-                    "function": "program_systemusage()",
-                    "compatibility": {
-                        "supported_os": ['nt', 'posix']
-                    },
-                    "settings": {
-                        "delay": 1
-                    }
+                "settings": {
+                    "threads": 2
                 }
             },
-            "selected": 0
-        }
+            2: {
+                "name": "Task Killer",
+                "description": "View and kill running processes",
+                "function": "program_taskkiller()",
+                "compatibility": {
+                    "supported_os": ['nt']
+                },
+                "settings": {
+                    "mode": "basic"
+                }
+            },
+            3: {
+                "name": "Pshell",
+                "description": "Full-fledged P0wersh3ll",
+                "compatibility": {
+                    "supported_os": ['nt']
+                },
+                "function": "program_pshell()"
+            },
+            4: {
+                "name": "Terminal",
+                "description": "Command prompt (cannot change current working directory!)",
+                "compatibility": {
+                    "supported_os": ['nt']
+                },
+                "function": "program_terminal()"
+            },
+            5: {
+                "name": "System Usage",
+                "description": "Basic CPU/RAM usage info",
+                "function": "program_systemusage()",
+                "compatibility": {
+                    "supported_os": ['nt', 'posix']
+                },
+                "settings": {
+                    "delay": 1
+                }
+            }
+        },
+        "selected": 0
     }
-reset_data()
+}
 
 
 pbox_ascii = f""":::::::::  :::::::::   ::::::::  :::    :::
