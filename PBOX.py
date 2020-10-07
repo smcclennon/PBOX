@@ -184,13 +184,30 @@ def bug_report():
                 bug_report_consent = 'N'
             if bug_report_consent != 'N':
                 try:
-                    print('\n[1/3] Please enter your name')
-                    name = input('Name: ')
-                    print('\n[2/3] Please enter a valid email address (if you don\'t, we won\'t receive the report!)')
-                    email = input('Email: ')
-                    print('\n[3/3] Please tell us about the bug and how to reproduce it')
-                    comments = input('Bug details: ')
+                    while True:
+                        print('\n[1/3] Please enter your name')
+                        name = input('Name: ')
+                        if len(name) > 0:
+                            break
+                        else:
+                            print('**Please don\'t leave this field blank**')
+                    import re
+                    while True:
+                        print('\n[2/3] Please enter your email address (we\'ll use this to get back to you regarding your bug report)')
+                        email = input('Email: ')
+                        if email != None and re.match('[^@]+@[^@]+\.[^@]+', email):
+                            break
+                        else:
+                            print('**Please enter a valid email address**')
+                    while True:
+                        print('\n[3/3] Please tell us about the bug and how to reproduce it\nAdd any details that you think may help us find what\'s causing the bug\nIf you can remember, please include steps to reproduce the bug')
+                        comments = input('Bug details: ')
+                        if comments != None and len(comments) >= 10:
+                            break
+                        else:
+                            print('**Please type at least 10 characters**')
                 except KeyboardInterrupt:
+                    print('Bug report cancelled')
                     return
 
                 print('Sending bug report...')
@@ -199,7 +216,7 @@ def bug_report():
                     if str(response) == '<Response [200]>':
                         print(f'Bug report sent successfully! Thank you for helping contribute towards {data["meta"]["name"]}')
                     elif str(response) == '<Response [400]>':
-                        print('We weren\'t able to recieve your bug report because there was a problem with it. This is typically a blank or invalid field')
+                        print('We weren\'t able to recieve your bug report because there was a problem with it. This is typically an invalid field')
                     elif str(response) == 'ImportError':
                         print('We were unable to import required modules for sending the bug report')
                     elif response != None:
