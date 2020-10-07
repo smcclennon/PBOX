@@ -574,8 +574,8 @@ def program_systemusage():
 
 if __name__ == "__main__":
     try:
-        x = 1/0
         while True:
+            zz = 533+4/43/5/0
             menu_interface()
     except Exception as e:
         if data["meta"]["sentry"]["import_success"]:
