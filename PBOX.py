@@ -386,15 +386,14 @@ def menu_interface():
 
 
 def program_volute():
-    import atexit
     from threading import Thread
     from ctypes import cast, POINTER
-
 
     if (smart_import('comtypes', install_only=True) != True
     or smart_import('pycaw', install_only=True) != True):
         sleep(5)
-        return
+        return  # Exit the function
+
     from comtypes import CLSCTX_ALL
     from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
@@ -403,32 +402,54 @@ def program_volute():
     IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
     volume = cast(interface, POINTER(IAudioEndpointVolume))
 
-    run = True
-    def request_threads_stop():
-        print('Shutting down Volute...')
-        run = False
-    atexit.register(request_threads_stop)
+    thread_quantity = data["program"]["id"][1]["settings"]["threads"]
+
+    CURSOR_UP_ONE = '\x1b[1A'
+    ERASE_LINE = '\x1b[2K'
 
     def unmuteThread():
-        while run:
+        thread_id = thread_quantity
+        while thread_id <= thread_quantity:
             volume.SetMute(0, None)
 
-    print(f'Creating {data["program"]["id"][1]["settings"]["threads"]} threads...')
-    
+    print('How Volute works:')
+    print('-  Volute creates threads, which are like mini background programs. These are used to unmute your system.')
+    print('-  Each thread contains a loop which sends an unmute signal to your system over and over again.')
+    print('-  Volute is only useful for combatting other applications continuously muting your system')
+
+    print('\nHow many threads should I use?')
+    print('-  Continuously sending unmute signals can lead to a lot of CPU usage, especially with more threads.')
+    print('-  You should increase/decrease threads according to how choppy your audio is.')
+    print('-  If your machine begins to lag or become hotter than usual, kill some Volute threads immediately.')
+
+    print('\n== Controls ==')
+    print('-  Create 1 thread: Press enter')
+    print('-  Kill 1 thread: Press Ctrl+C')
+    print('   To exit Volute and return to the main menu, kill all active threads\n')
+
     for i in range(0, data["program"]["id"][1]["settings"]["threads"]):
         Thread(target = unmuteThread).start()
-    print('Success!')
+    while True:
+        print(f'Active threads: {thread_quantity} ', end='')
+        try:
+            input()
+            print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
+            thread_quantity += 1
+            Thread(target = unmuteThread).start()
+        except KeyboardInterrupt:
+            print(ERASE_LINE, end='\r')
+            thread_quantity -= 1
+            if thread_quantity <= 0:
+                print('Shutting down Volute...')
+                break
 
-    print('\nYour system is being unmuted multiple times per second')
-    print('If the audio is choppy, try altering the number of threads generated.')
-    print(data["meta"]["standard_message"]["return_to_main_menu"])
-    try:
-        input()
-    except KeyboardInterrupt:
-        pass
-    print('Shutting down Volute...')
-    run = False
-    atexit.unregister(request_threads_stop)
+    # Prevent PBOX immediately exiting on return to the main menu due to user holding down Ctrl+C
+    while True:
+        try:
+            sleep(1)  # Try to sleep for 1 second
+            break  # If Ctrl+C does not interrupt the sleep, exit the loop
+        except KeyboardInterrupt:  # If Ctrl+C is still held down, loop again
+            print('** Please let go of Ctrl+C **', end='\r')
 
 def program_pshell():
     #os.system('color 1f')
