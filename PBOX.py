@@ -250,7 +250,7 @@ def update():
     }
 
     # ===[ Changing code ]===
-    updater["updater_ver"] = "2.0.2"
+    updater["updater_ver"] = "2.0.4"
     import os  # detecting OS type (nt, posix, java), clearing console window, restart the script
     from distutils.version import LooseVersion as semver  # as semver for readability
     import urllib.request, json  # load and parse the GitHub API, download updates
@@ -270,8 +270,8 @@ def update():
             # Handle target environment that doesn't support HTTPS verification
             ssl._create_default_https_context = _create_unverified_https_context
 
-    print('Checking for updates...', end='\r')
     for i in range(3):  # Try to retry the update up to 3 times if an error occurs
+        print(f'Checking for updates...({i+1})', end='\r')
         try:
             with urllib.request.urlopen("https://smcclennon.github.io/api/v2/update.json") as update_api:  # internal api
                 update_api = json.loads(update_api.read().decode())
@@ -308,6 +308,8 @@ def update():
                     break  # Stop parsing patch notes after the current version has been met
             except TypeError:  # Incorrect version format + semver causes errors (Example: semver('Build-1'))
                 pass  # Skip/do nothing
+            except KeyboardInterrupt:
+                return  # Exit the function
             except:  # Anything else, soft fail
                 traceback.print_exc()
 
@@ -319,17 +321,19 @@ def update():
         except KeyboardInterrupt:
             confirm = 'N'
         if confirm != 'N':
-            print(f'Downloading new file...')
-            urllib.request.urlretrieve(update_api["project"][updater["proj_id"]]["github_api"]["latest_release"]["release_download"], os.path.basename(__file__)+'.update_tmp')  # download the latest version to cwd
-
+            print('Downloading new file...')
+            try:
+                urllib.request.urlretrieve(update_api["project"][updater["proj_id"]]["github_api"]["latest_release"]["release_download"], os.path.basename(__file__)+'.update_tmp')  # download the latest version to cwd
+            except KeyboardInterrupt:
+                return  # Exit the function
             os.rename(os.path.basename(__file__), os.path.basename(__file__)+'.old')
             os.rename(os.path.basename(__file__)+'.update_tmp', os.path.basename(__file__))
             os.remove(os.path.basename(__file__)+'.old')
             os.system('cls||clear')  # Clear console window
             if os.name == 'nt':
-                os.system('"'+os.path.basename(__file__)+'" 1')
+                os.system('"'+os.path.basename(__file__)+'" 1')  # Open the new file on Windows
             else:
-                os.system('python3 "'+os.path.basename(__file__)+'" || python2 "'+os.path.basename(__file__)+'"')
+                os.system('python3 "'+os.path.basename(__file__)+'" || python "'+os.path.basename(__file__)+'"')  # Open the new file on Linux/MacOS
             quit()
     # -==========[ Update code ]==========-
 
