@@ -173,9 +173,10 @@ if smart_import('sentry_sdk', install_only=True):
             return 'ImportError'
 
 def bug_report():
+    traceback.print_exc()
     if data["meta"]["sentry"]["import_success"]:
         event_id = sentry_sdk.last_event_id()
-        if event_id != None:
+        if event_id != None:  # If Sentry has detected an error
             print(f'\n\nWe\'ve encountered an error. (event_id: {event_id})')
             print('Would you like to fill in a quick bug report so we can fix the bug quicker?')
             try:
@@ -228,11 +229,13 @@ def bug_report():
                 except:
                     print('Unable to send bug report')
             else:
-                return
-    else:
-        print('A bug has been encountered, however we are unable to report it because Sentry failed to initialise')
+                return  # Exit function if user chose not to fill in a bug report
 
 
+# If sentry loaded successfully, check if an error has occurred at exit, and prompt the user to fill in a bug report if an error has occurred
+if data["meta"]["sentry"]["import_success"]:
+    import atexit
+    atexit.register(bug_report)
 
 def update():
     # -==========[ Update code ]==========-
@@ -605,7 +608,6 @@ if __name__ == "__main__":
     except Exception as e:
         if data["meta"]["sentry"]["import_success"]:
             sentry_sdk.capture_exception(e)
-        traceback.print_exc()
         bug_report()
 
     input('\n\nPress enter to exit')
