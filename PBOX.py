@@ -13,6 +13,9 @@ data = {
             "share_ip": True,  # Used to track unique cases of envountered errors
             "import_success": False,
             "dsn": "https://8fe72b3641fd42d69fdf8e03dc32acc5@o457336.ingest.sentry.io/5453156"
+        },
+        "standard_message": {
+            "return_to_main_menu": "Press Ctrl+C to return to the main menu"
         }
     },
     "setup": {
@@ -357,7 +360,7 @@ def menu_interface():
         print(f'[{program_id if compatible else len(str(program_id))*"!"}]: {data["program"]["id"][program_id]["name"]} - {data["program"]["id"][program_id]["description"]}')
         sleep(0.05)
     try:
-        selected_program = input('\nEnter a number to select a program\n> ')
+        selected_program = input('\nEnter a number and press enter to choose a program\n> ')
     except KeyboardInterrupt:
         exit()
 
@@ -411,14 +414,14 @@ def program_volute():
             volume.SetMute(0, None)
 
     print(f'Creating {data["program"]["id"][1]["settings"]["threads"]} threads...')
-
+    
     for i in range(0, data["program"]["id"][1]["settings"]["threads"]):
         Thread(target = unmuteThread).start()
     print('Success!')
 
     print('\nYour system is being unmuted multiple times per second')
     print('If the audio is choppy, try altering the number of threads generated.')
-    print('\nPress ENTER to stop')
+    print(data["meta"]["standard_message"]["return_to_main_menu"])
     try:
         input()
     except KeyboardInterrupt:
@@ -429,9 +432,11 @@ def program_volute():
 
 def program_pshell():
     #os.system('color 1f')
+    print('Type "exit" to return to the main menu\n')
     os.system('powershell.exe')
 
 def program_terminal():
+    print(data["meta"]["standard_message"]["return_to_main_menu"])
     os.system('ver')
     print('(c) Microsoft Corporation. All rights reserved.\n')
     import subprocess
@@ -451,9 +456,10 @@ def program_taskkiller():
             os.system("tasklist /v")
         print("\n- Please enter the task that you would like to kill")
         print("  Example: 'notepad.exe'")
-        print("- To refresh the tasklist, press enter")
-        print(f'- Mode: {data["program"]["id"][data["program"]["selected"]]["settings"]["mode"]}')
+        print(f'\n- Mode: {data["program"]["id"][data["program"]["selected"]]["settings"]["mode"]}')
         print("  To change modes, type '.toggle'")
+        print("\nPress enter to refresh the tasklist")
+        print(data["meta"]["standard_message"]["return_to_main_menu"])
         term=input("\n> ")
         if term=="":
             os.system("cls")
@@ -564,6 +570,7 @@ def program_systemusage():
         menu_meta()
         program_meta()
         print(usage_print, flush=True)
+        print(data["meta"]["standard_message"]["return_to_main_menu"])
         if data["program"]["id"][data["program"]["selected"]]["settings"]["delay"] <= 0:
             input('Press enter to refresh...')
         else:
