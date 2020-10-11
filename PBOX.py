@@ -74,7 +74,7 @@ data = {
             },
             6: {
                 "name": "Archiver",
-                "description": "Create and extract archives",
+                "description": "Create and extract zip files",
                 "function": "program_archiver()",
                 "compatibility": {
                     "supported_os": ['nt', 'posix']
@@ -636,10 +636,10 @@ def program_archiver():
                 final_print += 'Interface: CLI'
             if mode == '1':
                 final_print += '\nMode: **Create archive**'
-                final_print += '\nSupported filetypes: .zip'
+                final_print += '\nSupported filetypes: ZIP'
             elif mode == '2':
                 final_print += '\nMode: **Extract archive**'
-                final_print += '\nSupported filetypes: Everything Patool supports'
+                final_print += '\nSupported filetypes: ZIP'
             if target_file_path != None:
                 final_print += f'\nTarget file: {target_file_path}'
             return final_print
@@ -651,8 +651,8 @@ def program_archiver():
             print(settings_print())
 
         print('What is Archiver?')
-        print('-  Archiver can create zip files and extract popular archive formats without using the appropriate file extension.')
-        print('-  This is useful if your organisation blocks the creation of .zip files for example.\n')
+        print('-  Archiver can create and extract zip files without needing the correct file extension.')
+        print('-  This is useful if your organisation blocks the creation of .zip\n')
 
         print('-  **Known bug: When Keyboard Interrupting (Ctrl+C) during file selection, future interrupts get stuck**')
         print('-  **Temporary fix: To Keyboard Interrupt in the future, you may need to press return (enter) after interrupting**')
@@ -676,17 +676,7 @@ def program_archiver():
                 break
 
 
-        if mode == '1':
-            import zipfile
-
-        elif mode == '2':
-            if (smart_import('pyunpack', install_only=True) != True
-            or smart_import('patoolib', package="patool", install_only=True) != True):
-                sleep(5)
-                return  # Exit the function
-            import pyunpack
-            import patoolib
-
+        import zipfile
 
         while True:
             clean_console()
@@ -760,14 +750,18 @@ def program_archiver():
                             arcname = absname[len(abs_src) + 1:]
                             i += 1
                             print(f'{i}. Zipping: {os.path.join(dirname, filename)}\nAs: {arcname}\n')
-                            zf.write(absname, arcname)
+                            try:
+                                zf.write(absname, arcname)
+                            except PermissionError as e:
+                                print(e)
 
 
             elif mode =='2':
                 file_output = target_file_basename+'_decompressed'
                 if not os.path.exists(file_output):
                     os.makedirs(file_output)
-                pyunpack.Archive(target_file_path).extractall(file_output)
+                with zipfile.ZipFile(target_file_path, 'r') as zf:
+                    zf.extractall(file_output)
             print('Done!\n')
             print(f'Find your files at: {os.path.abspath(file_output)}')
             if mode == '1':
@@ -776,10 +770,14 @@ def program_archiver():
 
         except KeyboardInterrupt:
             print('Operation cancelled')
-        except (ValueError, pyunpack.PatoolError):
-            print('The archive you selected is not supported.')
-            print(f'Supported archive extraction types:\n7z (.7z), ACE (.ace), ALZIP (.alz), AR (.a), ARC (.arc), ARJ (.arj), BZIP2 (.bz2), CAB (.cab), compress (.Z), CPIO (.cpio), DEB (.deb), DMS (.dms), GZIP (.gz), LRZIP (.lrz), LZH (.lha, .lzh), LZIP (.lz), LZMA (.lzma), LZOP (.lzo), RPM (.rpm), RAR (.rar), RZIP (.rz), TAR (.tar), XZ (.xz), ZIP (.zip, .jar) and ZOO (.zoo)')
-            print(f'\nWe created the folder {file_output} which were were going to put your decompressed files into. It\'s likely empty as the archive failed. You might want to delete it.')
+        except zipfile.BadZipFile as e:
+            if str(e) == 'File is not a zip file':
+                print('The archive you selected is not supported.')
+                print(f'Supported archive extraction types: .zip')
+            else:
+                print('The archive you selected is corrupt')
+            print(e)
+            print(f'\nWe created the folder {file_output} which we were going to put your decompressed files into. It\'s likely empty as the archive failed. You might want to delete it.')
         try:
             input('\nPress enter to return to the menu')
         except (EOFError):
