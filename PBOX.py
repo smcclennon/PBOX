@@ -71,6 +71,14 @@ data = {
                 "settings": {
                     "delay": 1
                 }
+            },
+            6: {
+                "name": "Smarchive",
+                "description": "Create and extract archives",
+                "function": "program_smarchive()",
+                "compatibility": {
+                    "supported_os": ['nt', 'posix']
+                }
             }
         },
         "selected": 0
@@ -592,9 +600,6 @@ def program_systemusage():
             except KeyError:
                 pass
 
-
-
-
         menu_meta()
         program_meta()
         print(usage_print, flush=True)
@@ -603,6 +608,127 @@ def program_systemusage():
             input('Press enter to refresh...')
         else:
             sleep(data["program"]["id"][data["program"]["selected"]]["settings"]["delay"])
+
+def program_smarchive():
+    CURSOR_UP_ONE = '\x1b[1A'
+    ERASE_LINE = '\x1b[2K'
+
+    while True:
+        mode = None
+        target_file_path = None
+
+        def settings_print():
+            final_print = ''
+            if mode == '1':
+                final_print += 'Mode: Create archive'
+                final_print += '\nSupported filetypes: .zip'
+            elif mode == '2':
+                final_print += 'Mode: Extract archive'
+                final_print += '\nSupported filetypes: A lot'
+            if target_file_path != None:
+                final_print += f'\nTarget file: {target_file_path}'
+            return final_print
+
+        def clean_console():
+            os.system('cls||clear')
+            menu_meta()
+            program_meta()
+            print(settings_print())
+            print('\n'+data["meta"]["standard_message"]["return_to_main_menu"])
+
+        print('What is Smarchive?')
+        print('-  Smarchive can create zip files and extract popular archive formats without using the appropriate file extension.')
+        print('-  This is useful if your organisation blocks the creation of .zip files for example.\n')
+
+        print(data["meta"]["standard_message"]["return_to_main_menu"])
+
+        print('\nWhat would you like to do?')
+        print('1. Create an archive')
+        print('2. Extract an archive\n')
+        while True:
+            mode = str(input('> '))
+            if mode != '1' and mode != '2':
+                print('Please choose "1" or "2"')
+                sleep(1)
+                print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
+                print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
+            else:
+                break
+
+
+        if mode == '1':
+            from pathlib import Path
+            from zipfile import ZipFile, ZIP_DEFLATED
+
+        elif mode == '2':
+            if (smart_import('pyunpack', install_only=True) != True
+            or smart_import('patoolib', package="patool", install_only=True) != True):
+                sleep(5)
+                return  # Exit the function
+            from pyunpack import Archive
+            import patoolib
+
+
+        clean_console()
+        print('\nEnter the full path to the target file')
+        print('Example: C:\\Users\\PBOX\\Downloads\\homework')
+        while True:
+            target_file_path = str(input('> '))
+            if mode == '1' and os.path.isdir(target_file_path):
+                break
+            if os.path.isfile(target_file_path):
+                break
+            print('Invalid filepath. Please try again.')
+            sleep(1.2)
+            print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
+            print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
+
+
+        target_file_basename = os.path.basename(target_file_path)
+        target_file_basename_no_ext = os.path.splitext(target_file_path)[0]
+
+        try:
+            if mode == '2':
+                if not os.path.exists(target_file_basename_no_ext):
+                    os.makedirs(target_file_basename_no_ext)
+
+            clean_console()
+            print('\nProcessing...')
+
+            if mode == '1':
+                # https://stackoverflow.com/a/63931979/9457576
+                file_output = target_file_basename+'.z_ip__pbox'
+                skip_empty_dir=False
+                with ZipFile(file_output, mode='w', compression=ZIP_DEFLATED) as zf:
+                    paths = [Path(target_file_path)]
+                    while paths:
+                        p = paths.pop()
+                        if p.is_dir():
+                            paths.extend(p.iterdir())
+                            if skip_empty_dir:
+                                continue
+                        zf.write(p)
+
+            elif mode =='2':
+                file_output = target_file_basename_no_ext
+                Archive(target_file_path).extractall(target_file_basename_no_ext)
+            print('Done!')
+            print(f'Find your files at: {os.path.abspath(file_output)}')
+            if mode == '1':
+                print('Add the file extension .zip to your file to extract it using the program of your choice')
+                print('If you are unable to rename your file, you can use this program to extract it for you')
+            input('\nPress enter to return to the menu')
+
+        except KeyboardInterrupt:
+            print('Operation cancelled')
+        except ValueError:
+            print('The archive you selected is not supported.')
+            print(f'Supported archive extraction types:\n7z (.7z), ACE (.ace), ALZIP (.alz), AR (.a), ARC (.arc), ARJ (.arj), BZIP2 (.bz2), CAB (.cab), compress (.Z), CPIO (.cpio), DEB (.deb), DMS (.dms), GZIP (.gz), LRZIP (.lrz), LZH (.lha, .lzh), LZIP (.lz), LZMA (.lzma), LZOP (.lzo), RPM (.rpm), RAR (.rar), RZIP (.rz), TAR (.tar), XZ (.xz), ZIP (.zip, .jar) and ZOO (.zoo)')
+            input('Press enter to continue')
+
+        menu_meta()
+        program_meta()
+
 
 
 if __name__ == "__main__":
