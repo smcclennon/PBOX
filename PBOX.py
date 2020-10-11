@@ -779,7 +779,7 @@ def program_archiver():
         except (ValueError, pyunpack.PatoolError):
             print('The archive you selected is not supported.')
             print(f'Supported archive extraction types:\n7z (.7z), ACE (.ace), ALZIP (.alz), AR (.a), ARC (.arc), ARJ (.arj), BZIP2 (.bz2), CAB (.cab), compress (.Z), CPIO (.cpio), DEB (.deb), DMS (.dms), GZIP (.gz), LRZIP (.lrz), LZH (.lha, .lzh), LZIP (.lz), LZMA (.lzma), LZOP (.lzo), RPM (.rpm), RAR (.rar), RZIP (.rz), TAR (.tar), XZ (.xz), ZIP (.zip, .jar) and ZOO (.zoo)')
-            print(f'We created the folder {file_output} which were were going to put your decompressed files into. It\'s likely empty as the archive failed. You might want to delete it.')
+            print(f'\nWe created the folder {file_output} which were were going to put your decompressed files into. It\'s likely empty as the archive failed. You might want to delete it.')
         try:
             input('\nPress enter to return to the menu')
         except (EOFError):
