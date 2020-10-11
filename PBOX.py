@@ -617,7 +617,7 @@ def program_archiver():
     ERASE_LINE = '\x1b[2K'
 
     while True:
-        if (data["meta"]["os"] != 'nt'
+        if (data["setup"]["os"] != 'nt'
             or smart_import("easygui", install_only=True) != True):
             gui = False
             sleep(1)
