@@ -779,9 +779,6 @@ def program_archiver():
         except ValueError:
             print('The archive you selected is not supported.')
             print(f'Supported archive extraction types:\n7z (.7z), ACE (.ace), ALZIP (.alz), AR (.a), ARC (.arc), ARJ (.arj), BZIP2 (.bz2), CAB (.cab), compress (.Z), CPIO (.cpio), DEB (.deb), DMS (.dms), GZIP (.gz), LRZIP (.lrz), LZH (.lha, .lzh), LZIP (.lz), LZMA (.lzma), LZOP (.lzo), RPM (.rpm), RAR (.rar), RZIP (.rz), TAR (.tar), XZ (.xz), ZIP (.zip, .jar) and ZOO (.zoo)')
-        except zipfile.BadZipfile as e:
-            print('Bad zip file')
-            print(e)
         try:
             input('\nPress enter to return to the menu')
         except (EOFError):
