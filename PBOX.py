@@ -750,6 +750,7 @@ def program_archiver():
 
             if mode == '1':
                 # https://stackoverflow.com/a/27992144/9457576
+                file_output = target_file_basename+'.z_ip'
                 with zipfile.ZipFile(file_output, "w", zipfile.ZIP_DEFLATED) as zf:
                     abs_src = os.path.abspath(target_file_path)
                     i = 0
