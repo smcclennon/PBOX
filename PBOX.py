@@ -650,8 +650,8 @@ def program_archiver():
             program_meta()
             print(settings_print())
 
-        print('What is Smarchive?')
-        print('-  Smarchive can create zip files and extract popular archive formats without using the appropriate file extension.')
+        print('What is Archiver?')
+        print('-  Archiver can create zip files and extract popular archive formats without using the appropriate file extension.')
         print('-  This is useful if your organisation blocks the creation of .zip files for example.\n')
 
         print('-  **Known bug: When Keyboard Interrupting (Ctrl+C) during file selection, future interrupts get stuck**')
