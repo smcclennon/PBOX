@@ -48,18 +48,18 @@ data = {
             3: {
                 "name": "Pshell",
                 "description": "Full-fledged P0wersh3ll",
+                "function": "program_pshell()",
                 "compatibility": {
                     "supported_os": ['nt']
-                },
-                "function": "program_pshell()"
+                }
             },
             4: {
                 "name": "Terminal",
                 "description": "Command prompt (cannot change current working directory!)",
+                "function": "program_terminal()",
                 "compatibility": {
                     "supported_os": ['nt']
-                },
-                "function": "program_terminal()"
+                }
             },
             5: {
                 "name": "System Usage",
