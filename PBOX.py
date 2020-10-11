@@ -78,6 +78,10 @@ data = {
                 "function": "program_archiver()",
                 "compatibility": {
                     "supported_os": ['nt', 'posix']
+                },
+                "settings": {
+                    "zip_file_extension": ".z_ip",
+                    "extract_foldername_append": "_decompressed"
                 }
             }
         },
@@ -740,7 +744,7 @@ def program_archiver():
 
             if mode == '1':
                 # https://stackoverflow.com/a/27992144/9457576
-                file_output = target_file_basename+'.z_ip'
+                file_output = target_file_basename+data["program"]["id"][6]["settings"]["zip_file_extension"]
                 with zipfile.ZipFile(file_output, "w", zipfile.ZIP_DEFLATED) as zf:
                     abs_src = os.path.abspath(target_file_path)
                     i = 0
@@ -757,7 +761,7 @@ def program_archiver():
 
 
             elif mode =='2':
-                file_output = target_file_basename+'_decompressed'
+                file_output = target_file_basename+data["program"]["id"][6]["settings"]["extract_foldername_append"]
                 if not os.path.exists(file_output):
                     os.makedirs(file_output)
                 with zipfile.ZipFile(target_file_path, 'r') as zf:
