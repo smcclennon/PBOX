@@ -7,7 +7,7 @@ from time import sleep
 data = {
     "meta": {
         "name": "PBOX",
-        "ver": "0.1.0",
+        "ver": "0.2.0",
         "id": "6",
         "sentry": {
             "share_ip": True,  # Used to track unique cases of envountered errors
