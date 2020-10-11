@@ -373,7 +373,7 @@ def menu_interface():
         else:
             compatible = False
         print(f'[{program_id if compatible else len(str(program_id))*"!"}]: {data["program"]["id"][program_id]["name"]} - {data["program"]["id"][program_id]["description"]}')
-        sleep(0.05)
+        sleep(0.02)
     try:
         selected_program = input('\nEnter a number and press enter to choose a program\n> ')
     except KeyboardInterrupt:
