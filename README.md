@@ -36,7 +36,7 @@ Download the [**Latest Release**](https://github.com/smcclennon/PBOX/releases/la
 |Program|Image|
 |:-:|:-:|
 |Main Menu|![Main Menu](https://smcclennon.github.io/assets/images/screenshots/PBOX/main_menu.png)|
-|Volute|![Volute](https://smcclennon.github.io/assets/images/screenshots/PBOX/volute.png)|
+|Volute|![Volute](https://smcclennon.github.io/assets/images/screenshots/PBOX/volute_0.2.0.png)|
 |Task Killer|![Task Killer](https://smcclennon.github.io/assets/images/screenshots/PBOX/task_killer.png)|
 |Pshell|![Pshell](https://smcclennon.github.io/assets/images/screenshots/PBOX/pshell.png)|
 |Terminal|![Terminal](https://smcclennon.github.io/assets/images/screenshots/PBOX/terminal.png)|
