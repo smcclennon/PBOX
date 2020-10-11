@@ -73,9 +73,9 @@ data = {
                 }
             },
             6: {
-                "name": "Smarchive",
+                "name": "Archiver",
                 "description": "Create and extract archives",
-                "function": "program_smarchive()",
+                "function": "program_archiver()",
                 "compatibility": {
                     "supported_os": ['nt', 'posix']
                 }
@@ -609,22 +609,34 @@ def program_systemusage():
         else:
             sleep(data["program"]["id"][data["program"]["selected"]]["settings"]["delay"])
 
-def program_smarchive():
+def program_archiver():
     CURSOR_UP_ONE = '\x1b[1A'
     ERASE_LINE = '\x1b[2K'
 
     while True:
+        if (smart_import("easygui", install_only=True) != True):
+            gui = False
+            sleep(1)
+            print('\n\n\n')
+        else:
+            import easygui
+            gui = True
+
         mode = None
         target_file_path = None
 
         def settings_print():
             final_print = ''
+            if gui == True:
+                final_print += 'Interface: GUI'
+            elif gui == False:
+                final_print += 'Interface: CLI'
             if mode == '1':
-                final_print += 'Mode: Create archive'
+                final_print += '\nMode: **Create archive**'
                 final_print += '\nSupported filetypes: .zip'
             elif mode == '2':
-                final_print += 'Mode: Extract archive'
-                final_print += '\nSupported filetypes: A lot'
+                final_print += '\nMode: **Extract archive**'
+                final_print += '\nSupported filetypes: Everything Patool supports'
             if target_file_path != None:
                 final_print += f'\nTarget file: {target_file_path}'
             return final_print
@@ -634,11 +646,13 @@ def program_smarchive():
             menu_meta()
             program_meta()
             print(settings_print())
-            print('\n'+data["meta"]["standard_message"]["return_to_main_menu"])
 
         print('What is Smarchive?')
         print('-  Smarchive can create zip files and extract popular archive formats without using the appropriate file extension.')
         print('-  This is useful if your organisation blocks the creation of .zip files for example.\n')
+
+        print('-  **Known bug: When Keyboard Interrupting (Ctrl+C) during file selection, future interrupts get stuck**')
+        print('-  **Temporary fix: To Keyboard Interrupt in the future, you may need to press return (enter) after interrupting**')
 
         print(data["meta"]["standard_message"]["return_to_main_menu"])
 
@@ -646,7 +660,10 @@ def program_smarchive():
         print('1. Create an archive')
         print('2. Extract an archive\n')
         while True:
-            mode = str(input('> '))
+            try:
+                mode = str(input('> '))
+            except (EOFError):
+                pass  # Ignore
             if mode != '1' and mode != '2':
                 print('Please choose "1" or "2"')
                 sleep(1)
@@ -657,8 +674,7 @@ def program_smarchive():
 
 
         if mode == '1':
-            from pathlib import Path
-            from zipfile import ZipFile, ZIP_DEFLATED
+            import zipfile
 
         elif mode == '2':
             if (smart_import('pyunpack', install_only=True) != True
@@ -669,63 +685,103 @@ def program_smarchive():
             import patoolib
 
 
-        clean_console()
-        print('\nEnter the full path to the target file')
-        print('Example: C:\\Users\\PBOX\\Downloads\\homework')
         while True:
-            target_file_path = str(input('> '))
-            if mode == '1' and os.path.isdir(target_file_path):
-                break
-            if os.path.isfile(target_file_path):
-                break
-            print('Invalid filepath. Please try again.')
-            sleep(1.2)
-            print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
-            print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
+            clean_console()
+
+            if gui == False:
+                print('\n'+data["meta"]["standard_message"]["return_to_main_menu"])
+                print('\nEnter the full path to the target file')
+                print('Example: C:\\Users\\PBOX\\Downloads\\homework')
+
+            elif mode == '1':
+                print('\nPlease select a folder using the GUI file picker')
+                print('All files within the selected folder will be added to the archive')
+                print('To switch to the CLI file picker, exit the file picker GUI without selecting a file')
+
+            elif mode == '2':
+                print('\nPlease select the archive file using the GUI file picker')
+                print('To switch to the CLI file picker, exit the file picker GUI without selecting a file')
 
 
-        target_file_basename = os.path.basename(target_file_path)
-        target_file_basename_no_ext = os.path.splitext(target_file_path)[0]
+            while True:
+                if not gui: target_file_path = str(input('> '))
+
+                elif mode == '1':
+                    try:
+                        target_file_path = easygui.diropenbox()  # Select any folder
+                    except KeyboardInterrupt:
+                        print('KeyboardInterrupt recieved whilst the GUI was open. To KeyboardInterrupt again, you may need to also press enter')
+                        sleep(3)
+                elif mode == '2':
+                    try:
+                        target_file_path = easygui.fileopenbox()  # Select any file
+                    except KeyboardInterrupt:
+                            print('KeyboardInterrupt recieved whilst the GUI was open. To KeyboardInterrupt again, you may need to also press enter')
+                            sleep(3)
+
+                if gui and target_file_path == None:
+                    gui = False
+                    print('**No file selected in GUI mode. Switching to CLI mode**')
+                    sleep(1)
+                    break
+                else:
+                    if mode == '1' and os.path.isdir(target_file_path):
+                        break
+                    if os.path.isfile(target_file_path):
+                        break
+                print('Invalid filepath. Please try again.')
+                sleep(1.2)
+                print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
+                print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
+
+            if target_file_path != None:  # If GUI filepicker did not exit without choosing a file, or CLI file picker was used
+                break
+
+        target_file_basename = os.path.basename(target_file_path)  # 'C:\users\PBOX\desktop\coolfile.2019.png' -> 'coolfile.2019.png'
+        target_file_basename_no_ext = os.path.splitext(target_file_basename)[0]  # 'coolfile.2019.png' -> 'coolfile.2019'
 
         try:
-            if mode == '2':
-                if not os.path.exists(target_file_basename_no_ext):
-                    os.makedirs(target_file_basename_no_ext)
-
             clean_console()
+            print('\n'+data["meta"]["standard_message"]["return_to_main_menu"])
             print('\nProcessing...')
 
             if mode == '1':
-                # https://stackoverflow.com/a/63931979/9457576
-                file_output = target_file_basename+'.z_ip__pbox'
-                skip_empty_dir=False
-                with ZipFile(file_output, mode='w', compression=ZIP_DEFLATED) as zf:
-                    paths = [Path(target_file_path)]
-                    while paths:
-                        p = paths.pop()
-                        if p.is_dir():
-                            paths.extend(p.iterdir())
-                            if skip_empty_dir:
-                                continue
-                        zf.write(p)
+                # https://stackoverflow.com/a/27992144/9457576
+                with zipfile.ZipFile(file_output, "w", zipfile.ZIP_DEFLATED) as zf:
+                    abs_src = os.path.abspath(target_file_path)
+                    i = 0
+                    for dirname, subdirs, files in os.walk(target_file_path):
+                        for filename in files:
+                            absname = os.path.abspath(os.path.join(dirname, filename))
+                            arcname = absname[len(abs_src) + 1:]
+                            i += 1
+                            print(f'{i}. Zipping: {os.path.join(dirname, filename)}\nAs: {arcname}\n')
+                            zf.write(absname, arcname)
+
 
             elif mode =='2':
-                file_output = target_file_basename_no_ext
-                Archive(target_file_path).extractall(target_file_basename_no_ext)
-            print('Done!')
+                file_output = target_file_basename+'_decompressed'
+                if not os.path.exists(file_output):
+                    os.makedirs(file_output)
+                Archive(target_file_path).extractall(file_output)
+            print('Done!\n')
             print(f'Find your files at: {os.path.abspath(file_output)}')
             if mode == '1':
                 print('Add the file extension .zip to your file to extract it using the program of your choice')
                 print('If you are unable to rename your file, you can use this program to extract it for you')
-            input('\nPress enter to return to the menu')
 
         except KeyboardInterrupt:
             print('Operation cancelled')
         except ValueError:
             print('The archive you selected is not supported.')
             print(f'Supported archive extraction types:\n7z (.7z), ACE (.ace), ALZIP (.alz), AR (.a), ARC (.arc), ARJ (.arj), BZIP2 (.bz2), CAB (.cab), compress (.Z), CPIO (.cpio), DEB (.deb), DMS (.dms), GZIP (.gz), LRZIP (.lrz), LZH (.lha, .lzh), LZIP (.lz), LZMA (.lzma), LZOP (.lzo), RPM (.rpm), RAR (.rar), RZIP (.rz), TAR (.tar), XZ (.xz), ZIP (.zip, .jar) and ZOO (.zoo)')
-            input('Press enter to continue')
-
+        except zipfile.BadZipfile as e:
+            print('Bad zip file')
+            print(e)
+        try:
+            input('\nPress enter to return to the menu')
+        except (EOFError):
+            pass
         menu_meta()
         program_meta()
 
