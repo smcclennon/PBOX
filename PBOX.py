@@ -200,6 +200,7 @@ def bug_report():
                             break
                         else:
                             print('**Please don\'t leave this field blank**')
+                            sleep(1)
                     import re
                     while True:
                         print('\n[2/3] Please enter your email address (we\'ll use this to get back to you regarding your bug report)')
@@ -208,6 +209,7 @@ def bug_report():
                             break
                         else:
                             print('**Please enter a valid email address**')
+                            sleep(1)
                     while True:
                         print('\n[3/3] Please tell us about the bug and how to reproduce it\nAdd any details that you think may help us find what\'s causing the bug\nIf you can remember, please include steps to reproduce the bug')
                         comments = input('Bug details: ')
@@ -215,6 +217,7 @@ def bug_report():
                             break
                         else:
                             print('**Please type at least 10 characters**')
+                            sleep(1)
                 except KeyboardInterrupt:
                     print('Bug report cancelled')
                     return
