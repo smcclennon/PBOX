@@ -6,9 +6,9 @@ Some tools within PBOX have come from my other repository, [PYBY-Toolbox](https:
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/smcclennon/PBOX.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/smcclennon/PBOX/context:python)
 [![Maintainability](https://api.codeclimate.com/v1/badges/a4e85e15988e4dab380f/maintainability)](https://codeclimate.com/github/smcclennon/PBOX/maintainability)
 [![License](https://img.shields.io/github/license/smcclennon/PBOX)](LICENSE)
-[![GitHub last commit](https://img.shields.io/github/last-commit/smcclennon/PBOX)](https://github.com/smcclennon/PBOX/commits)
+[![Dev commits since latest release](https://img.shields.io/github/commits-since/smcclennon/PBOX/latest/dev?sort=semver)](https://GitHub.com/smcclennon/PBOX/commits/dev)
+[![Github download count](https://img.shields.io/github/downloads/smcclennon/PBOX/total.svg)](https://GitHub.com/smcclennon/PBOX/releases/)
 [![HitCount](https://hits.dwyl.com/smcclennon/PBOX.svg)](https://hits.dwyl.com/smcclennon/PBOX)
-
 ## Features
 - Multiple useful programs inside one, portable python file
 - Automatically install required dependancies
