@@ -684,7 +684,7 @@ def program_archiver():
             or smart_import('patoolib', package="patool", install_only=True) != True):
                 sleep(5)
                 return  # Exit the function
-            from pyunpack import Archive
+            import pyunpack
             import patoolib
 
 
@@ -767,7 +767,7 @@ def program_archiver():
                 file_output = target_file_basename+'_decompressed'
                 if not os.path.exists(file_output):
                     os.makedirs(file_output)
-                Archive(target_file_path).extractall(file_output)
+                pyunpack.Archive(target_file_path).extractall(file_output)
             print('Done!\n')
             print(f'Find your files at: {os.path.abspath(file_output)}')
             if mode == '1':
@@ -776,9 +776,10 @@ def program_archiver():
 
         except KeyboardInterrupt:
             print('Operation cancelled')
-        except ValueError:
+        except (ValueError, pyunpack.PatoolError):
             print('The archive you selected is not supported.')
             print(f'Supported archive extraction types:\n7z (.7z), ACE (.ace), ALZIP (.alz), AR (.a), ARC (.arc), ARJ (.arj), BZIP2 (.bz2), CAB (.cab), compress (.Z), CPIO (.cpio), DEB (.deb), DMS (.dms), GZIP (.gz), LRZIP (.lrz), LZH (.lha, .lzh), LZIP (.lz), LZMA (.lzma), LZOP (.lzo), RPM (.rpm), RAR (.rar), RZIP (.rz), TAR (.tar), XZ (.xz), ZIP (.zip, .jar) and ZOO (.zoo)')
+            print(f'We created the folder {file_output} which were were going to put your decompressed files into. It\'s likely empty as the archive failed. You might want to delete it.')
         try:
             input('\nPress enter to return to the menu')
         except (EOFError):
