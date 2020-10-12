@@ -193,7 +193,7 @@ def bug_report():
             print('Would you like to fill in a quick bug report so we can fix the bug quicker?')
             try:
                 bug_report_consent = input('Fill in bug report [Y/n]: ').upper()
-            except KeyboardInterrupt:
+            except (KeyboardInterrupt, EOFError):
                 bug_report_consent = 'N'
             if bug_report_consent != 'N':
                 try:
@@ -222,7 +222,7 @@ def bug_report():
                         else:
                             print('**Please type at least 10 characters**')
                             sleep(1)
-                except KeyboardInterrupt:
+                except (KeyboardInterrupt, EOFError):
                     print('Bug report cancelled')
                     return
 
@@ -239,7 +239,7 @@ def bug_report():
                         print(f'We weren\'t able to recieve your bug report: {response.status_code} {response.reason}')
                     else:
                         print('We weren\'t able to recieve your bug report')
-                except (KeyboardInterrupt, SystemExit):
+                except (KeyboardInterrupt, SystemExit, EOFError):
                     pass
                 except:
                     print('Unable to send bug report')
@@ -383,7 +383,7 @@ def menu_interface():
         sleep(0.02)
     try:
         selected_program = input('\nEnter a number and press enter to choose a program\n> ')
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, EOFError):
         exit()
 
     if selected_program in valid_id:
@@ -393,7 +393,7 @@ def menu_interface():
             program_meta()
             try:
                 eval(data["program"]["id"][int(selected_program)]["function"])
-            except KeyboardInterrupt:
+            except (KeyboardInterrupt, EOFError):
                 pass
         else:
             print(f'Sorry, {data["program"]["id"][int(selected_program)]["name"]} is not compatible with your OS.')
