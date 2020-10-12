@@ -424,14 +424,14 @@ def program_volute():
     IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
     volume = cast(interface, POINTER(IAudioEndpointVolume))
 
-    thread_quantity = data["program"]["id"][1]["settings"]["threads"]
+    data["program"]["id"][1]["settings"]["active_threads"] = 0
 
     CURSOR_UP_ONE = '\x1b[1A'
     ERASE_LINE = '\x1b[2K'
 
     def unmuteThread():
-        thread_id = thread_quantity
-        while thread_id <= thread_quantity:
+        thread_id = data["program"]["id"][1]["settings"]["active_threads"]
+        while thread_id <= data["program"]["id"][1]["settings"]["active_threads"]:
             volume.SetMute(0, None)
 
     print('How Volute works:')
@@ -449,19 +449,22 @@ def program_volute():
     print('-  Kill 1 thread: Press Ctrl+C')
     print('   To exit Volute and return to the main menu, kill all active threads\n')
 
+    # Start initial threads
     for i in range(0, data["program"]["id"][1]["settings"]["threads"]):
+        data["program"]["id"][1]["settings"]["active_threads"] += 1
         Thread(target = unmuteThread).start()
+
     while True:
-        print(f'Active threads: {thread_quantity} ', end='')
+        print(f'Active threads: {data["program"]["id"][1]["settings"]["active_threads"]} ', end='')
         try:
             input()
             print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
-            thread_quantity += 1
+            data["program"]["id"][1]["settings"]["active_threads"] += 1
             Thread(target = unmuteThread).start()
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, EOFError):
             print(ERASE_LINE, end='\r')
-            thread_quantity -= 1
-            if thread_quantity <= 0:
+            data["program"]["id"][1]["settings"]["active_threads"] -= 1
+            if data["program"]["id"][1]["settings"]["active_threads"] <= 0:
                 print('Shutting down Volute...')
                 break
 
