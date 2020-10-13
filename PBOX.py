@@ -7,12 +7,15 @@ from time import sleep
 data = {
     "meta": {
         "name": "PBOX",
-        "ver": "0.1.0",
+        "ver": "0.2.0",
         "id": "6",
         "sentry": {
             "share_ip": True,  # Used to track unique cases of envountered errors
             "import_success": False,
             "dsn": "https://8fe72b3641fd42d69fdf8e03dc32acc5@o457336.ingest.sentry.io/5453156"
+        },
+        "standard_message": {
+            "return_to_main_menu": "Press Ctrl+C to return to the main menu"
         }
     },
     "setup": {
@@ -45,18 +48,18 @@ data = {
             3: {
                 "name": "Pshell",
                 "description": "Full-fledged P0wersh3ll",
+                "function": "program_pshell()",
                 "compatibility": {
                     "supported_os": ['nt']
-                },
-                "function": "program_pshell()"
+                }
             },
             4: {
                 "name": "Terminal",
                 "description": "Command prompt (cannot change current working directory!)",
+                "function": "program_terminal()",
                 "compatibility": {
                     "supported_os": ['nt']
-                },
-                "function": "program_terminal()"
+                }
             },
             5: {
                 "name": "System Usage",
@@ -67,6 +70,18 @@ data = {
                 },
                 "settings": {
                     "delay": 1
+                }
+            },
+            6: {
+                "name": "Archiver",
+                "description": "Create and extract zip files",
+                "function": "program_archiver()",
+                "compatibility": {
+                    "supported_os": ['nt', 'posix']
+                },
+                "settings": {
+                    "zip_file_extension": ".z_ip",
+                    "extract_foldername_append": "_decompressed"
                 }
             }
         },
@@ -170,14 +185,15 @@ if smart_import('sentry_sdk', install_only=True):
             return 'ImportError'
 
 def bug_report():
+    traceback.print_exc()
     if data["meta"]["sentry"]["import_success"]:
         event_id = sentry_sdk.last_event_id()
-        if event_id != None:
+        if event_id != None:  # If Sentry has detected an error
             print(f'\n\nWe\'ve encountered an error. (event_id: {event_id})')
             print('Would you like to fill in a quick bug report so we can fix the bug quicker?')
             try:
                 bug_report_consent = input('Fill in bug report [Y/n]: ').upper()
-            except KeyboardInterrupt:
+            except (KeyboardInterrupt, EOFError):
                 bug_report_consent = 'N'
             if bug_report_consent != 'N':
                 try:
@@ -188,6 +204,7 @@ def bug_report():
                             break
                         else:
                             print('**Please don\'t leave this field blank**')
+                            sleep(1)
                     import re
                     while True:
                         print('\n[2/3] Please enter your email address (we\'ll use this to get back to you regarding your bug report)')
@@ -196,6 +213,7 @@ def bug_report():
                             break
                         else:
                             print('**Please enter a valid email address**')
+                            sleep(1)
                     while True:
                         print('\n[3/3] Please tell us about the bug and how to reproduce it\nAdd any details that you think may help us find what\'s causing the bug\nIf you can remember, please include steps to reproduce the bug')
                         comments = input('Bug details: ')
@@ -203,7 +221,8 @@ def bug_report():
                             break
                         else:
                             print('**Please type at least 10 characters**')
-                except KeyboardInterrupt:
+                            sleep(1)
+                except (KeyboardInterrupt, EOFError):
                     print('Bug report cancelled')
                     return
 
@@ -220,16 +239,18 @@ def bug_report():
                         print(f'We weren\'t able to recieve your bug report: {response.status_code} {response.reason}')
                     else:
                         print('We weren\'t able to recieve your bug report')
-                except (KeyboardInterrupt, SystemExit):
+                except (KeyboardInterrupt, SystemExit, EOFError):
                     pass
                 except:
                     print('Unable to send bug report')
             else:
-                return
-    else:
-        print('A bug has been encountered, however we are unable to report it because Sentry failed to initialise')
+                return  # Exit function if user chose not to fill in a bug report
 
 
+# If sentry loaded successfully, check if an error has occurred at exit, and prompt the user to fill in a bug report if an error has occurred
+if data["meta"]["sentry"]["import_success"]:
+    import atexit
+    atexit.register(bug_report)
 
 def update():
     # -==========[ Update code ]==========-
@@ -244,7 +265,7 @@ def update():
     }
 
     # ===[ Changing code ]===
-    updater["updater_ver"] = "2.0.2"
+    updater["updater_ver"] = "2.0.4"
     import os  # detecting OS type (nt, posix, java), clearing console window, restart the script
     from distutils.version import LooseVersion as semver  # as semver for readability
     import urllib.request, json  # load and parse the GitHub API, download updates
@@ -264,8 +285,8 @@ def update():
             # Handle target environment that doesn't support HTTPS verification
             ssl._create_default_https_context = _create_unverified_https_context
 
-    print('Checking for updates...', end='\r')
     for i in range(3):  # Try to retry the update up to 3 times if an error occurs
+        print(f'Checking for updates...({i+1})', end='\r')
         try:
             with urllib.request.urlopen("https://smcclennon.github.io/api/v2/update.json") as update_api:  # internal api
                 update_api = json.loads(update_api.read().decode())
@@ -302,6 +323,8 @@ def update():
                     break  # Stop parsing patch notes after the current version has been met
             except TypeError:  # Incorrect version format + semver causes errors (Example: semver('Build-1'))
                 pass  # Skip/do nothing
+            except KeyboardInterrupt:
+                return  # Exit the function
             except:  # Anything else, soft fail
                 traceback.print_exc()
 
@@ -313,17 +336,19 @@ def update():
         except KeyboardInterrupt:
             confirm = 'N'
         if confirm != 'N':
-            print(f'Downloading new file...')
-            urllib.request.urlretrieve(update_api["project"][updater["proj_id"]]["github_api"]["latest_release"]["release_download"], os.path.basename(__file__)+'.update_tmp')  # download the latest version to cwd
-
+            print('Downloading new file...')
+            try:
+                urllib.request.urlretrieve(update_api["project"][updater["proj_id"]]["github_api"]["latest_release"]["release_download"], os.path.basename(__file__)+'.update_tmp')  # download the latest version to cwd
+            except KeyboardInterrupt:
+                return  # Exit the function
             os.rename(os.path.basename(__file__), os.path.basename(__file__)+'.old')
             os.rename(os.path.basename(__file__)+'.update_tmp', os.path.basename(__file__))
             os.remove(os.path.basename(__file__)+'.old')
             os.system('cls||clear')  # Clear console window
             if os.name == 'nt':
-                os.system('"'+os.path.basename(__file__)+'" 1')
+                os.system('"'+os.path.basename(__file__)+'" 1')  # Open the new file on Windows
             else:
-                os.system('python3 "'+os.path.basename(__file__)+'" || python2 "'+os.path.basename(__file__)+'"')
+                os.system('python3 "'+os.path.basename(__file__)+'" || python "'+os.path.basename(__file__)+'"')  # Open the new file on Linux/MacOS
             quit()
     # -==========[ Update code ]==========-
 
@@ -355,10 +380,10 @@ def menu_interface():
         else:
             compatible = False
         print(f'[{program_id if compatible else len(str(program_id))*"!"}]: {data["program"]["id"][program_id]["name"]} - {data["program"]["id"][program_id]["description"]}')
-        sleep(0.05)
+        sleep(0.02)
     try:
-        selected_program = input('\nEnter a number to select a program\n> ')
-    except KeyboardInterrupt:
+        selected_program = input('\nEnter a number and press enter to choose a program\n> ')
+    except (KeyboardInterrupt, EOFError):
         exit()
 
     if selected_program in valid_id:
@@ -368,7 +393,7 @@ def menu_interface():
             program_meta()
             try:
                 eval(data["program"]["id"][int(selected_program)]["function"])
-            except KeyboardInterrupt:
+            except (KeyboardInterrupt, EOFError):
                 pass
         else:
             print(f'Sorry, {data["program"]["id"][int(selected_program)]["name"]} is not compatible with your OS.')
@@ -383,15 +408,14 @@ def menu_interface():
 
 
 def program_volute():
-    import atexit
     from threading import Thread
     from ctypes import cast, POINTER
-
 
     if (smart_import('comtypes', install_only=True) != True
     or smart_import('pycaw', install_only=True) != True):
         sleep(5)
-        return
+        return  # Exit the function
+
     from comtypes import CLSCTX_ALL
     from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
@@ -400,38 +424,69 @@ def program_volute():
     IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
     volume = cast(interface, POINTER(IAudioEndpointVolume))
 
-    run = True
-    def request_threads_stop():
-        print('Shutting down Volute...')
-        run = False
-    atexit.register(request_threads_stop)
+    data["program"]["id"][1]["settings"]["active_threads"] = 0
+
+    CURSOR_UP_ONE = '\x1b[1A'
+    ERASE_LINE = '\x1b[2K'
 
     def unmuteThread():
-        while run:
+        thread_id = data["program"]["id"][1]["settings"]["active_threads"]
+        while thread_id <= data["program"]["id"][1]["settings"]["active_threads"]:
             volume.SetMute(0, None)
 
-    print(f'Creating {data["program"]["id"][1]["settings"]["threads"]} threads...')
+    print('How Volute works:')
+    print('-  Volute creates threads, which are like mini background programs. These are used to unmute your system.')
+    print('-  Each thread contains a loop which sends an unmute signal to your system over and over again.')
+    print('-  Volute is only useful for combatting other applications continuously muting your system')
 
+    print('\nHow many threads should I use?')
+    print('-  Continuously sending unmute signals can lead to a lot of CPU usage, especially with more threads.')
+    print('-  You should increase/decrease threads according to how choppy your audio is.')
+    print('-  If your machine begins to lag or become hotter than usual, kill some Volute threads immediately.')
+
+    print('\n== Controls ==')
+    print('-  Create 1 thread: Press enter')
+    print('-  Kill 1 thread: Press Ctrl+C')
+    print('   To exit Volute and return to the main menu, kill all active threads\n')
+
+    # Start initial threads
     for i in range(0, data["program"]["id"][1]["settings"]["threads"]):
+        data["program"]["id"][1]["settings"]["active_threads"] += 1
         Thread(target = unmuteThread).start()
-    print('Success!')
 
-    print('\nYour system is being unmuted multiple times per second')
-    print('If the audio is choppy, try altering the number of threads generated.')
-    print('\nPress ENTER to stop')
-    try:
-        input()
-    except KeyboardInterrupt:
-        pass
-    print('Shutting down Volute...')
-    run = False
-    atexit.unregister(request_threads_stop)
+    while True:
+        try:
+            print(f'Active threads: {data["program"]["id"][1]["settings"]["active_threads"]} ', end='')
+            try:
+                input()
+                print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
+                data["program"]["id"][1]["settings"]["active_threads"] += 1
+                Thread(target = unmuteThread).start()
+            except (KeyboardInterrupt, EOFError):
+                print(ERASE_LINE, end='\r')
+                data["program"]["id"][1]["settings"]["active_threads"] -= 1
+                if data["program"]["id"][1]["settings"]["active_threads"] <= 0:
+                    print('Shutting down Volute...')
+                    break
+        except:  # If the computer is very slow and a KeyboardInterrupt is sent during the previous exception handle
+            pass  # Ignore and try the While loop again
+
+
+    # Prevent PBOX immediately exiting on return to the main menu due to user holding down Ctrl+C
+    while True:
+        try:
+            sleep(1)  # Try to sleep for 1 second
+            break  # If Ctrl+C does not interrupt the sleep, exit the loop
+        except KeyboardInterrupt:  # If Ctrl+C is still held down, loop again
+            print('** Please let go of Ctrl+C **', end='\r')
 
 def program_pshell():
     #os.system('color 1f')
+    print('Type "exit" to return to the main menu\n')
     os.system('powershell.exe')
 
 def program_terminal():
+    print(data["meta"]["standard_message"]["return_to_main_menu"])
     os.system('ver')
     print('(c) Microsoft Corporation. All rights reserved.\n')
     import subprocess
@@ -451,9 +506,10 @@ def program_taskkiller():
             os.system("tasklist /v")
         print("\n- Please enter the task that you would like to kill")
         print("  Example: 'notepad.exe'")
-        print("- To refresh the tasklist, press enter")
-        print(f'- Mode: {data["program"]["id"][data["program"]["selected"]]["settings"]["mode"]}')
+        print(f'\n- Mode: {data["program"]["id"][data["program"]["selected"]]["settings"]["mode"]}')
         print("  To change modes, type '.toggle'")
+        print("\nPress enter to refresh the tasklist")
+        print(data["meta"]["standard_message"]["return_to_main_menu"])
         term=input("\n> ")
         if term=="":
             os.system("cls")
@@ -558,16 +614,188 @@ def program_systemusage():
             except KeyError:
                 pass
 
-
-
-
         menu_meta()
         program_meta()
         print(usage_print, flush=True)
+        print(data["meta"]["standard_message"]["return_to_main_menu"])
         if data["program"]["id"][data["program"]["selected"]]["settings"]["delay"] <= 0:
             input('Press enter to refresh...')
         else:
             sleep(data["program"]["id"][data["program"]["selected"]]["settings"]["delay"])
+
+def program_archiver():
+    CURSOR_UP_ONE = '\x1b[1A'
+    ERASE_LINE = '\x1b[2K'
+
+    while True:
+        if (data["setup"]["os"] != 'nt'
+            or smart_import("easygui", install_only=True) != True):
+            gui = False
+            sleep(1)
+        else:
+            import easygui
+            gui = True
+
+        mode = None
+        target_file_path = None
+
+        def settings_print():
+            final_print = ''
+            if gui == True:
+                final_print += 'Interface: GUI'
+            elif gui == False:
+                final_print += 'Interface: CLI'
+            if mode == '1':
+                final_print += '\nMode: **Create archive**'
+                final_print += '\nSupported filetypes: ZIP'
+            elif mode == '2':
+                final_print += '\nMode: **Extract archive**'
+                final_print += '\nSupported filetypes: ZIP'
+            if target_file_path != None:
+                final_print += f'\nTarget file: {target_file_path}'
+            return final_print
+
+        def clean_console():
+            os.system('cls||clear')
+            menu_meta()
+            program_meta()
+            print(settings_print())
+
+        print('What is Archiver?')
+        print('-  Archiver can create and extract zip files without needing the correct file extension.')
+        print('-  This is useful if your organisation blocks the creation of .zip\n')
+
+        print('-  **Known bug: When Keyboard Interrupting (Ctrl+C) during file selection, future interrupts get stuck**')
+        print('-  **Temporary fix: To Keyboard Interrupt in the future, you may need to press return (enter) after interrupting**')
+
+        print(data["meta"]["standard_message"]["return_to_main_menu"])
+
+        print('\nWhat would you like to do?')
+        print('1. Create an archive')
+        print('2. Extract an archive\n')
+        while True:
+            try:
+                mode = str(input('> '))
+            except (EOFError):
+                pass  # Ignore
+            if mode != '1' and mode != '2':
+                print('Please choose "1" or "2"')
+                sleep(1)
+                print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
+                print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
+            else:
+                break
+
+
+        import zipfile
+
+        while True:
+            clean_console()
+
+            if gui == False:
+                print('\n'+data["meta"]["standard_message"]["return_to_main_menu"])
+                print('\nEnter the full path to the target file')
+                print('Example: C:\\Users\\PBOX\\Downloads\\homework')
+
+            elif mode == '1':
+                print('\nPlease select a folder using the GUI file picker')
+                print('All files within the selected folder will be added to the archive')
+                print('To switch to the CLI file picker, exit the file picker GUI without selecting a file')
+
+            elif mode == '2':
+                print('\nPlease select the archive file using the GUI file picker')
+                print('To switch to the CLI file picker, exit the file picker GUI without selecting a file')
+
+
+            while True:
+                if not gui: target_file_path = str(input('> '))
+
+                elif mode == '1':
+                    try:
+                        target_file_path = easygui.diropenbox()  # Select any folder
+                    except KeyboardInterrupt:
+                        print('KeyboardInterrupt recieved whilst the GUI was open. To KeyboardInterrupt again, you may need to also press enter')
+                        sleep(3)
+                elif mode == '2':
+                    try:
+                        target_file_path = easygui.fileopenbox()  # Select any file
+                    except KeyboardInterrupt:
+                            print('KeyboardInterrupt recieved whilst the GUI was open. To KeyboardInterrupt again, you may need to also press enter')
+                            sleep(3)
+
+                if gui and target_file_path == None:
+                    gui = False
+                    print('**No file selected in GUI mode. Switching to CLI mode**')
+                    sleep(1)
+                    break
+                else:
+                    if mode == '1' and os.path.isdir(target_file_path):
+                        break
+                    if os.path.isfile(target_file_path):
+                        break
+                print('Invalid filepath. Please try again.')
+                sleep(1.2)
+                print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
+                print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
+
+            if target_file_path != None:  # If GUI filepicker did not exit without choosing a file, or CLI file picker was used
+                break
+
+        target_file_basename = os.path.basename(target_file_path)  # 'C:\users\PBOX\desktop\coolfile.2019.png' -> 'coolfile.2019.png'
+        target_file_basename_no_ext = os.path.splitext(target_file_basename)[0]  # 'coolfile.2019.png' -> 'coolfile.2019'
+
+        try:
+            clean_console()
+            print('\n'+data["meta"]["standard_message"]["return_to_main_menu"])
+            print('\nProcessing...')
+
+            if mode == '1':
+                # https://stackoverflow.com/a/27992144/9457576
+                file_output = target_file_basename+data["program"]["id"][6]["settings"]["zip_file_extension"]
+                with zipfile.ZipFile(file_output, "w", zipfile.ZIP_DEFLATED) as zf:
+                    abs_src = os.path.abspath(target_file_path)
+                    i = 0
+                    for dirname, subdirs, files in os.walk(target_file_path):
+                        for filename in files:
+                            absname = os.path.abspath(os.path.join(dirname, filename))
+                            arcname = absname[len(abs_src) + 1:]
+                            i += 1
+                            print(f'{i}. Zipping: {os.path.join(dirname, filename)}\nAs: {arcname}\n')
+                            try:
+                                zf.write(absname, arcname)
+                            except PermissionError as e:
+                                print(e)
+
+
+            elif mode =='2':
+                file_output = target_file_basename+data["program"]["id"][6]["settings"]["extract_foldername_append"]
+                if not os.path.exists(file_output):
+                    os.makedirs(file_output)
+                with zipfile.ZipFile(target_file_path, 'r') as zf:
+                    zf.extractall(file_output)
+            print('Done!\n')
+            print(f'Find your files at: {os.path.abspath(file_output)}')
+            if mode == '1':
+                print('Add the file extension .zip to your file to extract it using the program of your choice')
+                print('If you are unable to rename your file, you can use this program to extract it for you')
+
+        except KeyboardInterrupt:
+            print('Operation cancelled')
+        except zipfile.BadZipFile as e:
+            if str(e) == 'File is not a zip file':
+                print('The archive you selected is not supported.')
+                print(f'Supported archive extraction types: .zip')
+            else:
+                print('The archive you selected is corrupt')
+            print(e)
+            print(f'\nWe created the folder {file_output} which we were going to put your decompressed files into. It\'s likely empty as the archive failed. You might want to delete it.')
+        try:
+            input('\nPress enter to return to the menu')
+        except (EOFError):
+            pass
+        menu_meta()
+        program_meta()
+
 
 
 if __name__ == "__main__":
@@ -577,7 +805,6 @@ if __name__ == "__main__":
     except Exception as e:
         if data["meta"]["sentry"]["import_success"]:
             sentry_sdk.capture_exception(e)
-        traceback.print_exc()
         bug_report()
 
     input('\n\nPress enter to exit')

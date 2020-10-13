@@ -6,9 +6,9 @@ Some tools within PBOX have come from my other repository, [PYBY-Toolbox](https:
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/smcclennon/PBOX.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/smcclennon/PBOX/context:python)
 [![Maintainability](https://api.codeclimate.com/v1/badges/a4e85e15988e4dab380f/maintainability)](https://codeclimate.com/github/smcclennon/PBOX/maintainability)
 [![License](https://img.shields.io/github/license/smcclennon/PBOX)](LICENSE)
-[![GitHub last commit](https://img.shields.io/github/last-commit/smcclennon/PBOX)](https://github.com/smcclennon/PBOX/commits)
+[![Dev commits since latest release](https://img.shields.io/github/commits-since/smcclennon/PBOX/latest/dev?sort=semver)](https://GitHub.com/smcclennon/PBOX/commits/dev)
+[![Github download count](https://img.shields.io/github/downloads/smcclennon/PBOX/total.svg)](https://GitHub.com/smcclennon/PBOX/releases/)
 [![HitCount](https://hits.dwyl.com/smcclennon/PBOX.svg)](https://hits.dwyl.com/smcclennon/PBOX)
-
 ## Features
 - Multiple useful programs inside one, portable python file
 - Automatically install required dependancies
@@ -30,15 +30,17 @@ Download the [**Latest Release**](https://github.com/smcclennon/PBOX/releases/la
 |Pshell|Windows Only|Call `powershell.exe` from within python|Command Prompt/PwrShell  have been disabled and you require a full-feature command line|
 |Terminal|Windows Only|Run Command Prompt commands via `os.system` and print the output. Bypass "Command Prompt disabled by your administrator". Does not support changing directory.|Command Prompt has been disabled and you require a basic command line (with no current working directory changing support)
 |System Usage|Windows, Linux, MacOS|View CPU usage for each core; memory and swap usage; all fixed and removable disks storage usage, session read/write totals; IP address for each network adapter, session download/upload totals|Task manager has been disabled and you would like to view system resource usage|
+|Archiver|Windows, Linux, MacOS|Create and extract zip archives (regardless of the file extension). Supported archive extraction types: `ZIP (.zip, .jar)`|Your organisation does not allow you to create or download zip files, but you need to send a bundle of files or have received an archive but cannot use it. Download archives with an alternative file extension (for example `.zip.totallynotanarchive`) and extract them with Archiver. Create zip archives with the `.z_ip` file extension using Archiver, then rename the file extension back to `.zip` to extract it using your favourite archive program, or use Archiver to extract it for you without needing to rename the file|
 
 ## Screenshots
 |Program|Image|
 |:-:|:-:|
 |Main Menu|![Main Menu](https://smcclennon.github.io/assets/images/screenshots/PBOX/main_menu.png)|
-|Volute|![Volute](https://smcclennon.github.io/assets/images/screenshots/PBOX/volute.png)|
+|Volute|![Volute](https://smcclennon.github.io/assets/images/screenshots/PBOX/volute_0.2.0.png)|
 |Task Killer|![Task Killer](https://smcclennon.github.io/assets/images/screenshots/PBOX/task_killer.png)|
 |Pshell|![Pshell](https://smcclennon.github.io/assets/images/screenshots/PBOX/pshell.png)|
 |Terminal|![Terminal](https://smcclennon.github.io/assets/images/screenshots/PBOX/terminal.png)|
 |System Usage|![System Usage](https://smcclennon.github.io/assets/images/screenshots/PBOX/system_usage.png)|
+|Archiver|![Archiver](https://smcclennon.github.io/assets/images/screenshots/PBOX/archiver.png)
 
 *Written in Python 3.8 on Windows 10*
