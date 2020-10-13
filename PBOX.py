@@ -455,18 +455,22 @@ def program_volute():
         Thread(target = unmuteThread).start()
 
     while True:
-        print(f'Active threads: {data["program"]["id"][1]["settings"]["active_threads"]} ', end='')
         try:
-            input()
-            print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
-            data["program"]["id"][1]["settings"]["active_threads"] += 1
-            Thread(target = unmuteThread).start()
-        except (KeyboardInterrupt, EOFError):
-            print(ERASE_LINE, end='\r')
-            data["program"]["id"][1]["settings"]["active_threads"] -= 1
-            if data["program"]["id"][1]["settings"]["active_threads"] <= 0:
-                print('Shutting down Volute...')
-                break
+            print(f'Active threads: {data["program"]["id"][1]["settings"]["active_threads"]} ', end='')
+            try:
+                input()
+                print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
+                data["program"]["id"][1]["settings"]["active_threads"] += 1
+                Thread(target = unmuteThread).start()
+            except (KeyboardInterrupt, EOFError):
+                print(ERASE_LINE, end='\r')
+                data["program"]["id"][1]["settings"]["active_threads"] -= 1
+                if data["program"]["id"][1]["settings"]["active_threads"] <= 0:
+                    print('Shutting down Volute...')
+                    break
+        except:  # If the computer is very slow and a KeyboardInterrupt is sent during the previous exception handle
+            pass  # Ignore and try the While loop again
+
 
     # Prevent PBOX immediately exiting on return to the main menu due to user holding down Ctrl+C
     while True:
