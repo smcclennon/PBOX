@@ -134,8 +134,10 @@ def smart_import(module, **kwargs):
 
 print(pbox_ascii)
 
+
 # Initialise Sentry
 # We use Sentry to automatically log bugs
+print('Importing Sentry...', end='\r')
 if smart_import('sentry_sdk', install_only=True):
     print('Initialising Sentry...', end='\r')
     import sentry_sdk
@@ -176,8 +178,8 @@ if smart_import('sentry_sdk', install_only=True):
         try:
             print('Obtaining hostname...     ', end='\r')
             sentry_user_scope["hostname"] = os.environ['COMPUTERNAME']
-            except:
-                pass
+        except:
+            pass
         scope.user = sentry_user_scope
 
     def bug_send(event_id, name, email, comments):
@@ -809,6 +811,9 @@ def program_archiver():
         program_meta()
 
 
+
+def file_downloader():
+    print('Download files with an alternative file extension')
 
 if __name__ == "__main__":
     try:
