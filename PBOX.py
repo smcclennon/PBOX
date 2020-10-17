@@ -160,13 +160,25 @@ if smart_import('sentry_sdk', install_only=True):
         scope.set_context("data dict", {
             "all": data
         })
+        sentry_user_scope = {}
         if data["meta"]["sentry"]["share_ip"]:
             import urllib.request
             try:
                 print('Obtaining IP...       ', end='\r')
-                scope.user = {"ip_address": urllib.request.urlopen('http://ip.42.pl/raw').read()}
+                sentry_user_scope["ip_address"] = urllib.request.urlopen('http://ip.42.pl/raw').read()
             except:
                 pass
+        try:
+            print('Obtaining username...     ',end='\r')
+            sentry_user_scope["username"] = (lambda: os.environ["USERNAME"] if "C:" in os.getcwd() else os.environ["USER"])()
+        except:
+            pass
+        try:
+            print('Obtaining hostname...     ', end='\r')
+            sentry_user_scope["hostname"] = os.environ['COMPUTERNAME']
+            except:
+                pass
+        scope.user = sentry_user_scope
 
     def bug_send(event_id, name, email, comments):
         url = 'https://sentry.io/api/0/projects/smcclennon/pbox/user-feedback/'
