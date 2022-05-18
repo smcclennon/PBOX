@@ -26,7 +26,7 @@ data = {
             1: {
                 "name": "Volute",
                 "description": "Force unmute your system audio",
-                "function": "program_volute()",  # eval(data["program"]["id"][1]["function"])
+                "function": "program_volute",
                 "compatibility": {
                     "supported_os": ['nt']
                 },
@@ -37,7 +37,7 @@ data = {
             2: {
                 "name": "Task Killer",
                 "description": "View and kill running processes",
-                "function": "program_taskkiller()",
+                "function": "program_taskkiller",
                 "compatibility": {
                     "supported_os": ['nt']
                 },
@@ -48,7 +48,7 @@ data = {
             3: {
                 "name": "Pshell",
                 "description": "Full-fledged P0wersh3ll",
-                "function": "program_pshell()",
+                "function": "program_pshell",
                 "compatibility": {
                     "supported_os": ['nt']
                 }
@@ -56,7 +56,7 @@ data = {
             4: {
                 "name": "Terminal",
                 "description": "Command prompt (cannot change current working directory!)",
-                "function": "program_terminal()",
+                "function": "program_terminal",
                 "compatibility": {
                     "supported_os": ['nt']
                 }
@@ -64,7 +64,7 @@ data = {
             5: {
                 "name": "System Usage",
                 "description": "Basic CPU/RAM usage info",
-                "function": "program_systemusage()",
+                "function": "program_systemusage",
                 "compatibility": {
                     "supported_os": ['nt', 'posix']
                 },
@@ -75,7 +75,7 @@ data = {
             6: {
                 "name": "Archiver",
                 "description": "Create and extract zip files",
-                "function": "program_archiver()",
+                "function": "program_archiver",
                 "compatibility": {
                     "supported_os": ['nt', 'posix']
                 },
@@ -406,7 +406,8 @@ def menu_interface():
             menu_meta()
             program_meta()
             try:
-                eval(data["program"]["id"][int(selected_program)]["function"])
+                program_function = data["program"]["id"][int(selected_program)]["function"]
+                globals()[program_function]()
             except (KeyboardInterrupt, EOFError):
                 pass
         else:
