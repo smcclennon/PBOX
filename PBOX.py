@@ -832,6 +832,7 @@ def program_systemtoolbox():
 [1]: Launch System Volume\
 ''')
     while True:
+        print("Press CTRL+C to exit System Toolbox.")
         choice = str(input("Launch program: "))
         if choice == "1":
             os.system("%windir%\\System32\\SndVol.exe -f 49825268")
