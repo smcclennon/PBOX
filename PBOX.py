@@ -7,10 +7,10 @@ from time import sleep
 data = {
     "meta": {
         "name": "PBOX",
-        "ver": "0.2.0",
+        "ver": "0.3.0",
         "id": "6",
         "sentry": {
-            "share_ip": True,  # Used to track unique cases of envountered errors
+            "share_ip": False,  # Used to track unique cases of envountered errors
             "import_success": False,
             "dsn": "https://8fe72b3641fd42d69fdf8e03dc32acc5@o457336.ingest.sentry.io/5453156"
         },
@@ -26,7 +26,7 @@ data = {
             1: {
                 "name": "Volute",
                 "description": "Force unmute your system audio",
-                "function": "program_volute()",  # eval(data["program"]["id"][1]["function"])
+                "function": "program_volute",
                 "compatibility": {
                     "supported_os": ['nt']
                 },
@@ -37,7 +37,7 @@ data = {
             2: {
                 "name": "Task Killer",
                 "description": "View and kill running processes",
-                "function": "program_taskkiller()",
+                "function": "program_taskkiller",
                 "compatibility": {
                     "supported_os": ['nt']
                 },
@@ -48,7 +48,7 @@ data = {
             3: {
                 "name": "Pshell",
                 "description": "Full-fledged P0wersh3ll",
-                "function": "program_pshell()",
+                "function": "program_pshell",
                 "compatibility": {
                     "supported_os": ['nt']
                 }
@@ -56,7 +56,7 @@ data = {
             4: {
                 "name": "Terminal",
                 "description": "Command prompt (cannot change current working directory!)",
-                "function": "program_terminal()",
+                "function": "program_terminal",
                 "compatibility": {
                     "supported_os": ['nt']
                 }
@@ -64,7 +64,7 @@ data = {
             5: {
                 "name": "System Usage",
                 "description": "Basic CPU/RAM usage info",
-                "function": "program_systemusage()",
+                "function": "program_systemusage",
                 "compatibility": {
                     "supported_os": ['nt', 'posix']
                 },
@@ -75,13 +75,21 @@ data = {
             6: {
                 "name": "Archiver",
                 "description": "Create and extract zip files",
-                "function": "program_archiver()",
+                "function": "program_archiver",
                 "compatibility": {
                     "supported_os": ['nt', 'posix']
                 },
                 "settings": {
                     "zip_file_extension": ".z_ip",
                     "extract_foldername_append": "_decompressed"
+                }
+            },
+            9: {
+                "name": "System Toolbox",
+                "description": "Quickly launch system utilities",
+                "function": "program_systemtoolbox",
+                "compatibility": {
+                    "supported_os": ['nt']
                 }
             }
         },
@@ -134,8 +142,10 @@ def smart_import(module, **kwargs):
 
 print(pbox_ascii)
 
+
 # Initialise Sentry
 # We use Sentry to automatically log bugs
+print('Importing Sentry...', end='\r')
 if smart_import('sentry_sdk', install_only=True):
     print('Initialising Sentry...', end='\r')
     import sentry_sdk
@@ -160,13 +170,25 @@ if smart_import('sentry_sdk', install_only=True):
         scope.set_context("data dict", {
             "all": data
         })
+        sentry_user_scope = {}
         if data["meta"]["sentry"]["share_ip"]:
             import urllib.request
             try:
                 print('Obtaining IP...       ', end='\r')
-                scope.user = {"ip_address": urllib.request.urlopen('http://ip.42.pl/raw').read()}
+                sentry_user_scope["ip_address"] = urllib.request.urlopen('http://ip.42.pl/raw').read()
             except:
                 pass
+        try:
+            print('Obtaining username...     ',end='\r')
+            sentry_user_scope["username"] = (lambda: os.environ["USERNAME"] if "C:" in os.getcwd() else os.environ["USER"])()
+        except:
+            pass
+        try:
+            print('Obtaining hostname...     ', end='\r')
+            sentry_user_scope["hostname"] = os.environ['COMPUTERNAME']
+        except:
+            pass
+        scope.user = sentry_user_scope
 
     def bug_send(event_id, name, email, comments):
         url = 'https://sentry.io/api/0/projects/smcclennon/pbox/user-feedback/'
@@ -392,7 +414,8 @@ def menu_interface():
             menu_meta()
             program_meta()
             try:
-                eval(data["program"]["id"][int(selected_program)]["function"])
+                program_function = data["program"]["id"][int(selected_program)]["function"]
+                globals()[program_function]()
             except (KeyboardInterrupt, EOFError):
                 pass
         else:
@@ -797,6 +820,24 @@ def program_archiver():
         program_meta()
 
 
+
+def file_downloader():
+    print('Download files with an alternative file extension')
+
+def program_systemtoolbox():
+    print('Type the number of the utility you wish to launch and press ENTER')
+    print('''\
+== Utilities ==
+
+[1]: Launch System Volume\
+''')
+    while True:
+        print("Press CTRL+C to exit System Toolbox.")
+        choice = str(input("Launch program: "))
+        if choice == "1":
+            os.system("%windir%\\System32\\SndVol.exe -f 49825268")
+        else:
+            print('Invalid program ID. Please try again.\n')
 
 if __name__ == "__main__":
     try:
