@@ -83,6 +83,14 @@ data = {
                     "zip_file_extension": ".z_ip",
                     "extract_foldername_append": "_decompressed"
                 }
+            },
+            9: {
+                "name": "System Toolbox",
+                "description": "Quickly launch system utilities",
+                "function": "program_systemtoolbox",
+                "compatibility": {
+                    "supported_os": ['nt']
+                }
             }
         },
         "selected": 0
@@ -815,6 +823,20 @@ def program_archiver():
 
 def file_downloader():
     print('Download files with an alternative file extension')
+
+def program_systemtoolbox():
+    print('Type the number of the utility you wish to launch and press ENTER')
+    print('''\
+== Utilities ==
+
+[1]: Launch System Volume\
+''')
+    while True:
+        choice = input("Launch program: ")
+        if choice == 1:
+            os.system("%windir%\\System32\\SndVol.exe -f 49825268")
+        else:
+            print('Invalid program ID. Please try again.\n')
 
 if __name__ == "__main__":
     try:
