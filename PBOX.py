@@ -832,8 +832,8 @@ def program_systemtoolbox():
 [1]: Launch System Volume\
 ''')
     while True:
-        choice = input("Launch program: ")
-        if choice == 1:
+        choice = str(input("Launch program: "))
+        if choice == "1":
             os.system("%windir%\\System32\\SndVol.exe -f 49825268")
         else:
             print('Invalid program ID. Please try again.\n')
