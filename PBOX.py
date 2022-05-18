@@ -10,7 +10,7 @@ data = {
         "ver": "0.2.0",
         "id": "6",
         "sentry": {
-            "share_ip": True,  # Used to track unique cases of envountered errors
+            "share_ip": False,  # Used to track unique cases of envountered errors
             "import_success": False,
             "dsn": "https://8fe72b3641fd42d69fdf8e03dc32acc5@o457336.ingest.sentry.io/5453156"
         },
