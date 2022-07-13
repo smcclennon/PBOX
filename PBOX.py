@@ -191,7 +191,6 @@ if smart_import('sentry_sdk', install_only=True):
         scope.user = sentry_user_scope
 
     def bug_send(event_id, name, email, comments):
-        url = 'https://sentry.io/api/0/projects/smcclennon/pbox/user-feedback/'
         headers = {'Authorization': f'DSN {data["meta"]["sentry"]["dsn"]}'}
         payload = {
             "event_id": str(event_id),
@@ -201,8 +200,8 @@ if smart_import('sentry_sdk', install_only=True):
         }
         if smart_import('requests', install_only=True):
             import requests
-            response = requests.post(url, headers=headers, data=payload)
-            return response
+            url = 'https://sentry.io/api/0/projects/smcclennon/pbox/user-feedback/'
+            return requests.post(url, headers=headers, data=payload)
         else:
             return 'ImportError'
 
@@ -217,56 +216,50 @@ def bug_report():
                 bug_report_consent = input('Fill in bug report [Y/n]: ').upper()
             except (KeyboardInterrupt, EOFError):
                 bug_report_consent = 'N'
-            if bug_report_consent != 'N':
-                try:
-                    while True:
-                        print('\n[1/3] Please enter your name')
-                        name = input('Name: ')
-                        if len(name) > 0:
-                            break
-                        else:
-                            print('**Please don\'t leave this field blank**')
-                            sleep(1)
-                    import re
-                    while True:
-                        print('\n[2/3] Please enter your email address (we\'ll use this to get back to you regarding your bug report)')
-                        email = input('Email: ')
-                        if email != None and re.match('[^@]+@[^@]+\.[^@]+', email):
-                            break
-                        else:
-                            print('**Please enter a valid email address**')
-                            sleep(1)
-                    while True:
-                        print('\n[3/3] Please tell us about the bug and how to reproduce it\nAdd any details that you think may help us find what\'s causing the bug\nIf you can remember, please include steps to reproduce the bug')
-                        comments = input('Bug details: ')
-                        if comments != None and len(comments) >= 10:
-                            break
-                        else:
-                            print('**Please type at least 10 characters**')
-                            sleep(1)
-                except (KeyboardInterrupt, EOFError):
-                    print('Bug report cancelled')
-                    return
-
-                print('Sending bug report...')
-                try:
-                    response = bug_send(event_id, name, email, comments)
-                    if str(response) == '<Response [200]>':
-                        print(f'Bug report sent successfully! Thank you for helping contribute towards {data["meta"]["name"]}')
-                    elif str(response) == '<Response [400]>':
-                        print('We weren\'t able to recieve your bug report because there was a problem with it. This is typically an invalid field')
-                    elif str(response) == 'ImportError':
-                        print('We were unable to import required modules for sending the bug report')
-                    elif response != None:
-                        print(f'We weren\'t able to recieve your bug report: {response.status_code} {response.reason}')
-                    else:
-                        print('We weren\'t able to recieve your bug report')
-                except (KeyboardInterrupt, SystemExit, EOFError):
-                    pass
-                except:
-                    print('Unable to send bug report')
-            else:
+            if bug_report_consent == 'N':
                 return  # Exit function if user chose not to fill in a bug report
+            try:
+                while True:
+                    print('\n[1/3] Please enter your name')
+                    name = input('Name: ')
+                    if len(name) > 0:
+                        break
+                    print('**Please don\'t leave this field blank**')
+                    sleep(1)
+                import re
+                while True:
+                    print('\n[2/3] Please enter your email address (we\'ll use this to get back to you regarding your bug report)')
+                    email = input('Email: ')
+                    if email != None and re.match('[^@]+@[^@]+\.[^@]+', email):
+                        break
+                    print('**Please enter a valid email address**')
+                    sleep(1)
+                while True:
+                    print('\n[3/3] Please tell us about the bug and how to reproduce it\nAdd any details that you think may help us find what\'s causing the bug\nIf you can remember, please include steps to reproduce the bug')
+                    comments = input('Bug details: ')
+                    if comments != None and len(comments) >= 10:
+                        break
+                    print('**Please type at least 10 characters**')
+                    sleep(1)
+            except (KeyboardInterrupt, EOFError):
+                print('Bug report cancelled')
+                return
+
+            print('Sending bug report...')
+            try:
+                response = bug_send(event_id, name, email, comments)
+                if str(response) == '<Response [200]>':
+                    print(f'Bug report sent successfully! Thank you for helping contribute towards {data["meta"]["name"]}')
+                elif str(response) == '<Response [400]>':
+                    print('We weren\'t able to recieve your bug report because there was a problem with it. This is typically an invalid field')
+                elif str(response) == 'ImportError':
+                    print('We were unable to import required modules for sending the bug report')
+                elif response != None:
+                    print(f'We weren\'t able to recieve your bug report: {response.status_code} {response.reason}')
+                else:
+                    print('We weren\'t able to recieve your bug report')
+            except (KeyboardInterrupt, SystemExit, EOFError):
+                pass
 
 
 # If sentry loaded successfully, check if an error has occurred at exit, and prompt the user to fill in a bug report if an error has occurred
@@ -283,11 +276,11 @@ def update():
     updater = {
         "proj": data["meta"]["name"],
         "proj_id": data["meta"]["id"],
-        "current_ver": data["meta"]["ver"]
+        "current_ver": data["meta"]["ver"],
+        "updater_ver": "2.0.4",
     }
 
-    # ===[ Changing code ]===
-    updater["updater_ver"] = "2.0.4"
+
     import os  # detecting OS type (nt, posix, java), clearing console window, restart the script
     from distutils.version import LooseVersion as semver  # as semver for readability
     import urllib.request, json  # load and parse the GitHub API, download updates
@@ -324,13 +317,13 @@ def update():
             break
         except Exception as e:  # If updating fails 3 times
             github_releases = {0: {'tag_name': 'v0.0.0'}}
-            if str(e) == "HTTP Error 404: Not Found":  # No releases found
+            if str(e) in {
+                "HTTP Error 404: Not Found",
+                '<urlopen error [Errno 11001] getaddrinfo failed>',
+            }:
                 break
-            elif str(e) == '<urlopen error [Errno 11001] getaddrinfo failed>':  # Cannot connect to website
-                break
-            else:
-                print('Error encountered whilst checking for updates. Full traceback below...')
-                traceback.print_exc()
+            print('Error encountered whilst checking for updates. Full traceback below...')
+            traceback.print_exc()
 
     if github_releases != [] and semver(github_releases[0]['tag_name'].replace('v', '')) > semver(updater["current_ver"]):
         print('Update available!      ')
@@ -347,25 +340,32 @@ def update():
                 pass  # Skip/do nothing
             except KeyboardInterrupt:
                 return  # Exit the function
-            except:  # Anything else, soft fail
-                traceback.print_exc()
-
         for release in changelog[::-1]:  # Step backwards, print latest patch notes last
             print(f'{release[0]}:\n{release[1]}\n')
 
         try:
-            confirm = input(str('Update now? [Y/n] ')).upper()
+            confirm = input('Update now? [Y/n] ').upper()
         except KeyboardInterrupt:
             confirm = 'N'
         if confirm != 'N':
             print('Downloading new file...')
             try:
-                urllib.request.urlretrieve(update_api["project"][updater["proj_id"]]["github_api"]["latest_release"]["release_download"], os.path.basename(__file__)+'.update_tmp')  # download the latest version to cwd
+                urllib.request.urlretrieve(
+                    update_api["project"][updater["proj_id"]]["github_api"][
+                        "latest_release"
+                    ]["release_download"],
+                    f'{os.path.basename(__file__)}.update_tmp',
+                )
+
             except KeyboardInterrupt:
                 return  # Exit the function
-            os.rename(os.path.basename(__file__), os.path.basename(__file__)+'.old')
-            os.rename(os.path.basename(__file__)+'.update_tmp', os.path.basename(__file__))
-            os.remove(os.path.basename(__file__)+'.old')
+            os.rename(os.path.basename(__file__), f'{os.path.basename(__file__)}.old')
+            os.rename(
+                f'{os.path.basename(__file__)}.update_tmp',
+                os.path.basename(__file__),
+            )
+
+            os.remove(f'{os.path.basename(__file__)}.old')
             os.system('cls||clear')  # Clear console window
             if os.name == 'nt':
                 os.system('"'+os.path.basename(__file__)+'" 1')  # Open the new file on Windows
@@ -397,10 +397,13 @@ def menu_interface():
     print('')
     for program_id in data["program"]["id"]:
         valid_id.append(str(program_id))
-        if data["setup"]["os"] in data["program"]["id"][program_id]["compatibility"]["supported_os"]:
-            compatible = True
-        else:
-            compatible = False
+        compatible = (
+            data["setup"]["os"]
+            in data["program"]["id"][program_id]["compatibility"][
+                "supported_os"
+            ]
+        )
+
         print(f'[{program_id if compatible else len(str(program_id))*"!"}]: {data["program"]["id"][program_id]["name"]} - {data["program"]["id"][program_id]["description"]}')
         sleep(0.02)
     try:
@@ -473,7 +476,7 @@ def program_volute():
     print('   To exit Volute and return to the main menu, kill all active threads\n')
 
     # Start initial threads
-    for i in range(0, data["program"]["id"][1]["settings"]["threads"]):
+    for i in range(data["program"]["id"][1]["settings"]["threads"]):
         data["program"]["id"][1]["settings"]["active_threads"] += 1
         Thread(target = unmuteThread).start()
 
@@ -547,7 +550,7 @@ def program_taskkiller():
             menu_meta()
             program_meta()
         else:
-            os.system("taskkill /f /im "+term+" /t")
+            os.system(f"taskkill /f /im {term} /t")
 def program_systemusage():
     if smart_import('psutil', install_only=True) != True:
         sleep(5)
@@ -577,22 +580,20 @@ def program_systemusage():
                 disk_io[i] = psutil.disk_io_counters(perdisk=True)[f"PhysicalDrive{i}"]._asdict()  # {0: {'read_count': 3849381, 'write_count': 3138262, 'read_bytes': 93119674368, 'write_bytes': 88870555136, 'read_time': 2227, 'write_time': 1318, 'error': 0}, 1: {'read_count': 238, 'write_count': 123, 'read_bytes': 2912256, 'write_bytes': 569344, 'read_time': 2, 'write_time': 37, 'error': 0}, 2: {'error': KeyError('PhysicalDrive2')}}
                 disk_io[i]["error"] = 0
             except Exception as e:
-                disk_io[i] = {}
-                disk_io[i]["error"] = e
+                disk_io[i] = {"error": e}
             try:
                 disk_usage[i] = psutil.disk_usage(disk_partitions[i]["device"])._asdict()  # (total=21378641920, used=4809781248, free=15482871808, percent=22.5)
                 disk_usage[i]["error"] = 0
             except Exception as e:
                 disk_usage[i] = {}
                 disk_usage[i]["error"] = e
-                pass
             i += 1
         del i
         #disk_usage = dict(psutil.disk_usage('/')._asdict())
-        net_io = {}
-        for item in list(psutil.net_io_counters(pernic=True).keys()):  # ['Local Area Connection', 'Local Area Connection* 10']
-            net_io[item] = psutil.net_io_counters(pernic=True)[item]._asdict()  # {'Local Area Connection': {'bytes_sent': 47484220, 'bytes_recv': 968508712, 'packets_sent': 507245, 'packets_recv': 737484, 'errin': 0, 'errout': 0, 'dropin': 0, 'dropout': 0}, 'Local Area Connection* 10': {'bytes_sent': 0, 'bytes_recv': 0, 'packets_sent': 0, 'packets_recv': 0, 'errin': 0, 'errout': 0, 'dropin': 0, 'dropout': 0}}
-
+        net_io = {
+            item: psutil.net_io_counters(pernic=True)[item]._asdict()
+            for item in list(psutil.net_io_counters(pernic=True).keys())
+        }
 
         net_if = {}
         for parent in psutil.net_if_addrs():
@@ -611,26 +612,28 @@ def program_systemusage():
         usage_print += f'Swap usage: {swap["used"]}/{swap["total"]}GB ({swap["percent"]}%)\n'
         usage_print += f'  Free: {swap["free"]}GB ({round(100-swap["percent"], 2)}%)\n'
         usage_print += '\n'
-        for disk in disk_partitions:
-            usage_print += f'Disk: {disk_partitions[disk]["device"]}\n'
+        for disk, value in disk_partitions.items():
+            usage_print += f'Disk: {value["device"]}\n'
             if disk_usage[disk]["error"] == 0:
                 usage_print += f'  Filesystem: {disk_partitions[disk]["fstype"]}\n'
                 usage_print += f'  Type: {disk_partitions[disk]["opts"][1].title()} ({disk_partitions[disk]["opts"][0]})\n'
                 usage_print += f'  Storage: {round(disk_usage[disk]["used"]/1073741824, 2)}/{round(disk_usage[disk]["total"]/1073741824, 2)}GB ({disk_usage[disk]["percent"]}%)\n'
                 usage_print += f'    Free: {round(disk_usage[disk]["free"]/1073741824, 2)}GB ({round(100-disk_usage[disk]["percent"], 2)}%)\n'
-                if disk_io[disk]["error"] == 0:
-                    usage_print += f'    Session Read/Write: {round(disk_io[disk]["read_bytes"]/1073741824, 2)}GB / {round(disk_io[disk]["write_bytes"]/1073741824, 2)}GB\n'
-                else:
-                    usage_print += f'    {disk_io[disk]["error"]}\n'
+                usage_print += (
+                    f'    Session Read/Write: {round(disk_io[disk]["read_bytes"]/1073741824, 2)}GB / {round(disk_io[disk]["write_bytes"]/1073741824, 2)}GB\n'
+                    if disk_io[disk]["error"] == 0
+                    else f'    {disk_io[disk]["error"]}\n'
+                )
+
             else:
                 usage_print += f'    {disk_usage[disk]["error"]}\n'
         usage_print += '\n'
         for key in list(net_io):
             try:
                 usage_print += f'Network Adapter: {key}\n'
-                if len(net_if[key])-1 >= 1 and "address" in net_if[key][1]:
+                if len(net_if[key]) >= 2 and "address" in net_if[key][1]:
                     usage_print += f'  IPv4: {net_if[key][1]["address"]}\n'
-                if len(net_if[key])-1 >= 2 and "address" in net_if[key][2]:
+                if len(net_if[key]) >= 3 and "address" in net_if[key][2]:
                     usage_print += f'  IPv6: {net_if[key][2]["address"]}\n'
                 if net_io[key]["bytes_sent"] > 0 or net_io[key]["bytes_recv"] > 0:
                     usage_print += f'  Session Download/Upload: {round(net_io[key]["bytes_recv"]/1073741824, 2)}GB / {round(net_io[key]["bytes_sent"]/1073741824, 2)}GB\n'
@@ -664,9 +667,9 @@ def program_archiver():
 
         def settings_print():
             final_print = ''
-            if gui == True:
+            if gui:
                 final_print += 'Interface: GUI'
-            elif gui == False:
+            elif not gui:
                 final_print += 'Interface: CLI'
             if mode == '1':
                 final_print += '\nMode: **Create archive**'
@@ -701,7 +704,7 @@ def program_archiver():
                 mode = str(input('> '))
             except (EOFError):
                 pass  # Ignore
-            if mode != '1' and mode != '2':
+            if mode not in ['1', '2']:
                 print('Please choose "1" or "2"')
                 sleep(1)
                 print(CURSOR_UP_ONE + ERASE_LINE, end='\r')
@@ -746,7 +749,7 @@ def program_archiver():
                             print('KeyboardInterrupt recieved whilst the GUI was open. To KeyboardInterrupt again, you may need to also press enter')
                             sleep(3)
 
-                if gui and target_file_path == None:
+                if gui and target_file_path is None:
                     gui = False
                     print('**No file selected in GUI mode. Switching to CLI mode**')
                     sleep(1)
@@ -807,7 +810,7 @@ def program_archiver():
         except zipfile.BadZipFile as e:
             if str(e) == 'File is not a zip file':
                 print('The archive you selected is not supported.')
-                print(f'Supported archive extraction types: .zip')
+                print('Supported archive extraction types: .zip')
             else:
                 print('The archive you selected is corrupt')
             print(e)
