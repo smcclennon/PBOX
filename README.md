@@ -35,12 +35,12 @@ Download the [**Latest Release**](https://github.com/smcclennon/PBOX/releases/la
 ## Screenshots
 |Program|Image|
 |:-:|:-:|
-|Main Menu|![Main Menu](https://smcclennon.github.io/assets/images/screenshots/PBOX/main_menu.png)|
-|Volute|![Volute](https://smcclennon.github.io/assets/images/screenshots/PBOX/volute_0.2.0.png)|
-|Task Killer|![Task Killer](https://smcclennon.github.io/assets/images/screenshots/PBOX/task_killer.png)|
-|Pshell|![Pshell](https://smcclennon.github.io/assets/images/screenshots/PBOX/pshell.png)|
-|Terminal|![Terminal](https://smcclennon.github.io/assets/images/screenshots/PBOX/terminal.png)|
-|System Usage|![System Usage](https://smcclennon.github.io/assets/images/screenshots/PBOX/system_usage.png)|
-|Archiver|![Archiver](https://smcclennon.github.io/assets/images/screenshots/PBOX/archiver.png)
+|Main Menu|![Main Menu](https://smcclennon-img.netlify.app/projects/PBOX/main-menu.png)|
+|Volute|![Volute](https://smcclennon-img.netlify.app/projects/PBOX/volute-0.2.0.png)|
+|Task Killer|![Task Killer](https://smcclennon-img.netlify.app/projects/PBOX/task-killer.png)|
+|Pshell|![Pshell](https://smcclennon-img.netlify.app/projects/PBOX/pshell.png)|
+|Terminal|![Terminal](https://smcclennon-img.netlify.app/projects/PBOX/terminal.png)|
+|System Usage|![System Usage](https://smcclennon-img.netlify.app/projects/PBOX/system-usage.png)|
+|Archiver|![Archiver](https://smcclennon-img.netlify.app/projects/PBOX/archiver.png)
 
 *Written in Python 3.8 on Windows 10*
